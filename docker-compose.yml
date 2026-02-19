@@ -7,19 +7,12 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+      EMAIL: ${EMAIL:-no-reply@example.com}
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - certbot_etc:/etc/letsencrypt
-      - certbot_var:/var/www/certbot
-    networks:
-      - messenger_network
-
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - certbot_etc:/etc/letsencrypt
-      - certbot_var:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+      - caddy_data:/data
+      - caddy_config:/config
     networks:
       - messenger_network
 
@@ -28,5 +21,5 @@ networks:
     external: true
 
 volumes:
-  certbot_etc:
-  certbot_var:
+  caddy_data:
+  caddy_config:

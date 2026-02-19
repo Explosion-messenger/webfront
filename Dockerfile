@@ -10,8 +10,15 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM nginx:stable-alpine as production-stage
-COPY --from=build-stage /app/dist /usr/share/nginx/html
-# Nginx config is handled by docker-compose mapping
+FROM caddy:2-alpine as production-stage
+
+WORKDIR /usr/share/caddy
+
+# Copy the built app
+COPY --from=build-stage /app/dist .
+
+# Copy Caddyfile
+COPY Caddyfile /etc/caddy/Caddyfile
+
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 443

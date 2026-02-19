@@ -1,0 +1,39 @@
+{
+    # Optional: your email for Let's Encrypt notifications
+    email {$EMAIL:no-reply@example.com}
+}
+
+# The domain handled by this server
+{$DOMAIN:localhost} {
+    # Serve static files from the build
+    root * /usr/share/caddy
+    file_server
+    
+    # Compress responses
+    encode gzip
+
+    # Redirect API calls to the backend container
+    # 'backend' is the service alias in messenger_network
+    handle_path /api/* {
+        reverse_proxy backend:8000
+    }
+
+    # Handle WebSockets
+    handle /ws* {
+        reverse_proxy backend:8000
+    }
+
+    # Handle static assets from backend
+    handle_path /avatars/* {
+        reverse_proxy backend:8000
+    }
+
+    handle_path /files/download/* {
+        reverse_proxy backend:8000
+    }
+
+    # Fallback for Single Page Application (React Router)
+    handle {
+        try_files {path} /index.html
+    }
+}
