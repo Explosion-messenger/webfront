@@ -24,9 +24,8 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive
 
     return (
         <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            whileHover={{ x: 4, backgroundColor: 'rgba(30, 41, 59, 0.4)' }}
+            layout
+            whileHover={{ backgroundColor: 'rgba(30, 41, 59, 0.4)' }}
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
             className={`p-4 flex items-center space-x-4 cursor-pointer transition-all duration-200 border-l-2 relative overflow-hidden ${isActive ? 'bg-brand-accent/10 border-brand-accent' : 'border-transparent'

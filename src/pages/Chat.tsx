@@ -191,11 +191,7 @@ const ChatPage: React.FC = () => {
             <div className="radar-glow" />
 
             {/* Sidebar */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="w-80 border-r border-brand-border flex flex-col bg-brand-sidebar z-10 shrink-0"
-            >
+            <div className="w-80 border-r border-brand-border flex flex-col bg-brand-sidebar z-10 shrink-0">
                 <div className="p-6 border-b border-brand-border flex items-center justify-between shrink-0">
                     <div className="flex items-center space-x-3">
                         <div className="relative group">
@@ -258,7 +254,7 @@ const ChatPage: React.FC = () => {
                         />
                     ))}
                 </div>
-            </motion.div>
+            </div>
 
             {/* Main Chat Area */}
             <div className="flex-1 flex flex-col relative z-10 bg-brand-bg/30 min-w-0">
