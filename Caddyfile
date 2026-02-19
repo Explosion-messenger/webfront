@@ -23,12 +23,12 @@
         reverse_proxy backend:8000
     }
 
-    # Handle static assets from backend
-    handle_path /avatars/* {
+    # Handle static assets from backend (preserve prefix)
+    handle /avatars/* {
         reverse_proxy backend:8000
     }
 
-    handle_path /files/download/* {
+    handle /files/download/* {
         reverse_proxy backend:8000
     }
 
