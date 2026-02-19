@@ -1,7 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { User as UserIcon } from 'lucide-react';
-import type { Chat, User } from '../hooks/useChat';
+import { type Chat, type User } from '../types';
 
 interface ChatListItemProps {
     chat: Chat;

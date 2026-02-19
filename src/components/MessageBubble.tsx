@@ -1,7 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { FileIcon, Trash2 } from 'lucide-react';
-import type { Message, User } from '../hooks/useChat';
+import { type Message, type User } from '../types';
 
 interface MessageBubbleProps {
     msg: Message;
@@ -33,8 +33,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, onDelet
 
             {/* Bubble */}
             <div className={`group relative max-w-[75%] p-4 rounded-2xl shadow-lg border transition-all ${isMe
-                    ? 'bg-nord10 border-nord9 text-nord6 message-bubble-right rounded-br-none'
-                    : 'bg-nord2 border-nord3 text-nord6 message-bubble-left rounded-bl-none'
+                ? 'bg-nord10 border-nord9 text-nord6 message-bubble-right rounded-br-none'
+                : 'bg-nord2 border-nord3 text-nord6 message-bubble-left rounded-bl-none'
                 }`}>
                 {!isMe && (
                     <span className="block text-[10px] uppercase tracking-widest font-black text-nord8 mb-1 opacity-70">
