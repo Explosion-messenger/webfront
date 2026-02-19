@@ -17,8 +17,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, onDelet
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
             className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end space-x-2 ${isMe ? 'space-x-reverse' : ''}`}
         >
             {/* Avatar */}
@@ -37,7 +38,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, onDelet
             </div>
 
             {/* Bubble */}
-            <div className={`group relative max-w-[75%] p-4 rounded-2xl shadow-premium border transition-all ${isMe
+            <div className={`group relative max-w-[75%] p-4 rounded-2xl shadow-premium border transition-shadow ${isMe
                 ? 'bg-brand-accent border-brand-accent/20 text-white rounded-br-none'
                 : 'bg-brand-card border-brand-border text-brand-text rounded-bl-none'
                 }`}>
@@ -52,11 +53,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, onDelet
                 {msg.file && (
                     <div className="mt-2">
                         {msg.file.mime_type.startsWith('image/') ? (
-                            <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg">
+                            <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg bg-black/20">
                                 <img
                                     src={`/files/download/${msg.file.path}`}
                                     alt={msg.file.filename}
-                                    className="max-w-full cursor-pointer hover:scale-[1.02] transition-transform duration-300"
+                                    className="max-w-full cursor-pointer hover:opacity-90 transition-opacity duration-300"
                                     onClick={() => window.open(`/files/download/${msg.file?.path}`, '_blank')}
                                 />
                             </div>
