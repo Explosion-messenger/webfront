@@ -10,8 +10,12 @@ jobs:
     steps:
       - name: Send Repository Dispatch to Infra
         run: |
-          curl -H "Accept: application/vnd.github.v3+json" \
-               -H "Authorization: token ${{ secrets.ORG_PAT }}" \
+          if [ -z "${{ secrets.ORG_PAT }}" ]; then
+            echo "Error: ORG_PAT is missing!"
+            exit 1
+          fi
+          curl -v -f -H "Accept: application/vnd.github.v3+json" \
+               -H "Authorization: Bearer ${{ secrets.ORG_PAT }}" \
                --request POST \
                --data '{"event_type": "frontend_updated"}' \
                https://api.github.com/repos/Explosion-messenger/infra/dispatches
