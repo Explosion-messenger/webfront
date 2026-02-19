@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
@@ -27,53 +28,72 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-nord0 px-4">
-            <div className="w-full max-w-md p-8 space-y-6 bg-nord1 rounded-none shadow-2xl border border-nord2">
-                <h1 className="text-3xl font-light text-center text-nord6 tracking-tight">Welcome</h1>
-                <p className="text-center text-nord4 font-light">Sign in to continue</p>
+        <div className="flex items-center justify-center min-h-screen bg-brand-bg px-4 relative overflow-hidden">
+            <div className="radar-glow" />
+
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="w-full max-w-md p-10 space-y-8 premium-card z-10"
+            >
+                <div className="text-center">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                    >
+                        <h1 className="text-4xl font-black text-white tracking-widest uppercase mb-2">Explosion</h1>
+                        <p className="text-brand-accent text-[10px] font-bold tracking-[0.4em] uppercase opacity-80">Synchronize Identity</p>
+                    </motion.div>
+                </div>
 
                 {error && (
-                    <div className="p-3 text-sm text-nord11 bg-nord11/10 border border-nord11/20 rounded-none">
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        className="p-4 text-xs font-bold uppercase tracking-widest text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl"
+                    >
                         {error}
-                    </div>
+                    </motion.div>
                 )}
 
-                <form className="space-y-4" onSubmit={handleSubmit}>
-                    <div>
-                        <label className="block mb-2 text-xs uppercase tracking-widest font-semibold text-nord4">Username</label>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                    <div className="space-y-2">
+                        <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-brand-text-dim ml-1">Username</label>
                         <input
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full px-4 py-2 bg-nord2 border border-nord3 rounded-none focus:outline-none focus:border-nord8 text-nord6 transition-colors"
+                            className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-white transition-all shadow-inner"
                             required
                         />
                     </div>
-                    <div>
-                        <label className="block mb-2 text-xs uppercase tracking-widest font-semibold text-nord4">Password</label>
+                    <div className="space-y-2">
+                        <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-brand-text-dim ml-1">Password</label>
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-2 bg-nord2 border border-nord3 rounded-none focus:outline-none focus:border-nord8 text-nord6 transition-colors"
+                            className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-white transition-all shadow-inner"
                             required
                         />
                     </div>
                     <button
                         type="submit"
-                        className="w-full py-3 px-4 bg-nord9 hover:bg-nord10 text-nord0 font-bold rounded-none transition duration-200 uppercase tracking-widest text-sm"
+                        className="glow-button w-full border-none py-4 text-xs font-black uppercase tracking-[0.35em] mt-4"
                     >
-                        Sign In
+                        Initialize
                     </button>
                 </form>
 
-                <p className="text-center text-nord4 text-sm">
-                    New here?{' '}
-                    <Link to="/register" className="text-nord8 hover:text-nord7 transition-colors">
-                        Create an account
+                <p className="text-center text-brand-text-dim text-[10px] font-bold uppercase tracking-widest pt-4">
+                    New entity?{' '}
+                    <Link to="/register" className="text-brand-accent hover:text-white transition-colors ml-2 underline underline-offset-4">
+                        Register Node
                     </Link>
                 </p>
-            </div>
+            </motion.div>
         </div>
     );
 };

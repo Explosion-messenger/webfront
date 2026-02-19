@@ -1,6 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { FileIcon, Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { type Message, type User } from '../types';
 
 interface MessageBubbleProps {
@@ -15,50 +16,57 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, onDelet
     const isMe = msg.sender_id === currentUser?.id;
 
     return (
-        <div className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end space-x-2 ${isMe ? 'space-x-reverse' : ''}`}>
+        <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end space-x-2 ${isMe ? 'space-x-reverse' : ''}`}
+        >
             {/* Avatar */}
             <div className="flex-shrink-0 mb-1">
                 {msg.sender.avatar_path ? (
                     <img
                         src={getAvatarUrl(msg.sender.avatar_path)!}
                         alt={msg.sender.username}
-                        className="w-8 h-8 rounded-full object-cover border border-nord3 shadow-sm"
+                        className="w-8 h-8 rounded-xl object-cover border border-brand-border shadow-sm"
                     />
                 ) : (
-                    <div className="w-8 h-8 bg-nord3 rounded-full flex items-center justify-center text-[10px] font-bold text-nord6 border border-nord4/10">
+                    <div className="w-8 h-8 bg-slate-800 rounded-xl flex items-center justify-center text-[10px] font-bold text-brand-text border border-brand-border">
                         {msg.sender.username[0].toUpperCase()}
                     </div>
                 )}
             </div>
 
             {/* Bubble */}
-            <div className={`group relative max-w-[75%] p-4 rounded-2xl shadow-lg border transition-all ${isMe
-                ? 'bg-nord10 border-nord9 text-nord6 message-bubble-right rounded-br-none'
-                : 'bg-nord2 border-nord3 text-nord6 message-bubble-left rounded-bl-none'
+            <div className={`group relative max-w-[75%] p-4 rounded-2xl shadow-premium border transition-all ${isMe
+                ? 'bg-brand-accent border-brand-accent/20 text-white rounded-br-none'
+                : 'bg-brand-card border-brand-border text-brand-text rounded-bl-none'
                 }`}>
                 {!isMe && (
-                    <span className="block text-[10px] uppercase tracking-widest font-black text-nord8 mb-1 opacity-70">
+                    <span className="block text-[10px] uppercase tracking-widest font-bold text-brand-accent mb-1">
                         {msg.sender.username}
                     </span>
                 )}
 
-                {msg.text && <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.text}</p>}
+                {msg.text && <p className="whitespace-pre-wrap text-sm leading-relaxed font-normal">{msg.text}</p>}
 
                 {msg.file && (
                     <div className="mt-2">
                         {msg.file.mime_type.startsWith('image/') ? (
-                            <img
-                                src={`/files/download/${msg.file.path}`}
-                                alt={msg.file.filename}
-                                className="max-w-full rounded-lg cursor-pointer border border-white/10 hover:border-nord8 transition-all"
-                                onClick={() => window.open(`/files/download/${msg.file?.path}`, '_blank')}
-                            />
+                            <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg">
+                                <img
+                                    src={`/files/download/${msg.file.path}`}
+                                    alt={msg.file.filename}
+                                    className="max-w-full cursor-pointer hover:scale-[1.02] transition-transform duration-300"
+                                    onClick={() => window.open(`/files/download/${msg.file?.path}`, '_blank')}
+                                />
+                            </div>
                         ) : (
                             <a
                                 href={`/files/download/${msg.file.path}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex items-center space-x-3 p-3 bg-nord0/30 border border-white/5 rounded-xl hover:bg-nord0/50 transition-all text-xs"
+                                className={`flex items-center space-x-3 p-3 border rounded-xl transition-all text-xs ${isMe ? 'bg-white/10 border-white/10 hover:bg-white/20' : 'bg-brand-bg/50 border-brand-border hover:bg-brand-bg'
+                                    }`}
                             >
                                 <FileIcon size={14} strokeWidth={1.5} />
                                 <span className="truncate">{msg.file.filename}</span>
@@ -68,13 +76,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, onDelet
                 )}
 
                 <div className={`flex items-center mt-2 space-x-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                    <span className="text-[9px] font-mono opacity-50">
+                    <span className={`text-[9px] font-medium uppercase tracking-tighter ${isMe ? 'text-white/60' : 'text-brand-text-dim'}`}>
                         {format(new Date(msg.created_at), 'HH:mm')}
                     </span>
                     {isMe && (
                         <button
                             onClick={() => onDelete(msg.id)}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-nord11"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-white/80 hover:text-white"
                             title="Delete message"
                         >
                             <Trash2 size={12} />
@@ -82,7 +90,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, onDelet
                     )}
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
