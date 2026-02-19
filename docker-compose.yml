@@ -6,7 +6,27 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
-    # Note: This frontend expects a 'backend' service to be available on the same network
-    # or reachable via the name 'backend'.
+      - certbot_etc:/etc/letsencrypt
+      - certbot_var:/var/www/certbot
+    networks:
+      - messenger_network
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot_etc:/etc/letsencrypt
+      - certbot_var:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - messenger_network
+
+networks:
+  messenger_network:
+    external: true
+
+volumes:
+  certbot_etc:
+  certbot_var:
