@@ -73,15 +73,23 @@ export function useChats() {
 
 export function useMessages(activeChatId: number | null) {
     const [messages, setMessages] = useState<Message[]>([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (!activeChatId) { setMessages([]); return; }
+        setMessages([]);
+        if (!activeChatId) {
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
         api.get(`/messages/${activeChatId}`)
             .then(r => setMessages(r.data))
-            .catch(console.error);
+            .catch(console.error)
+            .finally(() => setLoading(false));
     }, [activeChatId]);
 
-    return { messages, setMessages };
+    return { messages, setMessages, loading };
 }
 
 export function useAvatarEditor(refreshUser: () => Promise<void>) {

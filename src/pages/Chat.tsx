@@ -15,7 +15,7 @@ const ChatPage: React.FC = () => {
     const { user, logout, token, refreshUser } = useAuth();
     const { chats, setChats, fetchChats } = useChats();
     const [activeChat, setActiveChat] = useState<Chat | null>(null);
-    const { messages, setMessages } = useMessages(activeChat?.id || null);
+    const { messages, setMessages, loading: messagesLoading } = useMessages(activeChat?.id || null);
 
     const [inputText, setInputText] = useState('');
     const [showNewChat, setShowNewChat] = useState(false);
@@ -38,6 +38,7 @@ const ChatPage: React.FC = () => {
 
     useEffect(() => {
         activeChatIdRef.current = activeChat?.id || null;
+        setInputText(''); // Clear input when switching chats
     }, [activeChat?.id]);
 
     useEffect(() => {
@@ -299,14 +300,24 @@ const ChatPage: React.FC = () => {
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
-                                {messages.map((msg) => (
-                                    <MessageBubble
-                                        key={msg.id}
-                                        msg={msg}
-                                        currentUser={user}
-                                        onDelete={deleteMessage}
-                                    />
-                                ))}
+                                <AnimatePresence mode="popLayout">
+                                    {!messagesLoading ? (
+                                        messages.map((msg) => (
+                                            <MessageBubble
+                                                key={msg.id}
+                                                msg={msg}
+                                                currentUser={user}
+                                                onDelete={deleteMessage}
+                                            />
+                                        ))
+                                    ) : (
+                                        <div className="flex flex-col space-y-4 animate-pulse">
+                                            {[1, 2, 3].map(i => (
+                                                <div key={i} className={`h-16 w-2/3 rounded-2xl bg-brand-card/20 ${i % 2 === 0 ? 'self-end' : 'self-start'}`} />
+                                            ))}
+                                        </div>
+                                    )}
+                                </AnimatePresence>
                                 <div ref={messagesEndRef} />
                             </div>
 
