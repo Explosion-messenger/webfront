@@ -5,42 +5,34 @@
 
 # The domain handled by this server
 {$DOMAIN:localhost} {
-    # Serve static files from the build
-    root * /usr/share/caddy
-    file_server
-    
     # Compress responses
     encode gzip
+    root * /usr/share/caddy
 
-    # Redirect API calls to the backend container
-    # 'backend' is the service alias in messenger_network
+    # 1. API - highest priority
     handle_path /api/* {
         reverse_proxy backend:8000
     }
 
-    # Proxy to admin panel container.
-    # We use handle (NOT handle_path) so the path /admin/... is forwarded
-    # as-is. The admin_panel container's own Caddy config strips the prefix.
-    handle /admin* {
+    # 2. Admin Panel - strip /admin/ prefix here
+    handle_path /admin* {
         reverse_proxy admin_panel:80
     }
 
-    # Handle WebSockets
+    # 3. Static files for the main frontend (avatars, downloads)
     handle /ws* {
         reverse_proxy backend:8000
     }
-
-    # Handle static assets from backend (preserve prefix)
     handle /avatars/* {
         reverse_proxy backend:8000
     }
-
     handle /files/download/* {
         reverse_proxy backend:8000
     }
 
-    # Fallback for Single Page Application (React Router)
+    # 4. Main Frontend SPA fallback
     handle {
+        file_server
         try_files {path} /index.html
     }
 }
