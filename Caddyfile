@@ -14,8 +14,8 @@
         reverse_proxy backend:8000
     }
 
-    # 2. Admin Panel - strip /admin/ prefix here
-    handle_path /admin* {
+    # 2. Admin Panel - preserve /admin prefix for React Router basename
+    handle /admin* {
         reverse_proxy admin_panel:80
     }
 
