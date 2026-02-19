@@ -18,8 +18,10 @@
         reverse_proxy backend:8000
     }
 
-    # Proxy to admin panel container
-    handle /admin/* {
+    # Proxy to admin panel container.
+    # We use handle (NOT handle_path) so the path /admin/... is forwarded
+    # as-is. The admin_panel container's own Caddy config strips the prefix.
+    handle /admin* {
         reverse_proxy admin_panel:80
     }
 
