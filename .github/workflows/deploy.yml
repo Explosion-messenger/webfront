@@ -49,6 +49,15 @@ jobs:
             mkdir -p ~/messenger-frontend
             cd ~/messenger-frontend
             
+            # Login to GHCR on the server
+            echo "${{ secrets.ORG_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Create/Update .env file
+            cat <<EOF > .env
+            DOMAIN=${{ secrets.DOMAIN }}
+            EMAIL=${{ secrets.EMAIL }}
+            EOF
+
             # Create a minimal docker-compose for the frontend
             cat <<EOF > docker-compose.yml
             version: '3.8'
@@ -59,9 +68,7 @@ jobs:
                 ports:
                   - "80:80"
                   - "443:443"
-                environment:
-                  DOMAIN: \${DOMAIN}
-                  EMAIL: \${EMAIL}
+                env_file: .env
                 volumes:
                   - caddy_data:/data
                   - caddy_config:/config
