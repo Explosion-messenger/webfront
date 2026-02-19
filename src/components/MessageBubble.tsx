@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { FileIcon, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { type Message, type User } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface MessageBubbleProps {
     msg: Message;
@@ -13,7 +14,9 @@ interface MessageBubbleProps {
 const getAvatarUrl = (path?: string) => path ? `/avatars/${path}` : null;
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, onDelete }) => {
+    const { token } = useAuth();
     const isMe = msg.sender_id === currentUser?.id;
+    const downloadUrl = (path: string) => `/files/download/${path}${token ? `?token=${token}` : ''}`;
 
     return (
         <motion.div
@@ -55,15 +58,15 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, onDelet
                         {msg.file.mime_type.startsWith('image/') ? (
                             <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg bg-black/20">
                                 <img
-                                    src={`/files/download/${msg.file.path}`}
+                                    src={downloadUrl(msg.file.path)}
                                     alt={msg.file.filename}
                                     className="max-w-full cursor-pointer hover:opacity-90 transition-opacity duration-300"
-                                    onClick={() => window.open(`/files/download/${msg.file?.path}`, '_blank')}
+                                    onClick={() => window.open(downloadUrl(msg.file!.path), '_blank')}
                                 />
                             </div>
                         ) : (
                             <a
-                                href={`/files/download/${msg.file.path}`}
+                                href={downloadUrl(msg.file.path)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className={`flex items-center space-x-3 p-3 border rounded-xl transition-all text-xs ${isMe ? 'bg-white/10 border-white/10 hover:bg-white/20' : 'bg-brand-bg/50 border-brand-border hover:bg-brand-bg'
