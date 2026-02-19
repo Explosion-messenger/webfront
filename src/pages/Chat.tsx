@@ -214,9 +214,11 @@ const ChatPage: React.FC = () => {
                         <span className="font-light tracking-wide text-nord6">{user?.username}</span>
                     </div>
                     <div className="flex items-center space-x-1">
-                        <button onClick={avatarEditor.handleClearAllAvatars} className="p-2 hover:bg-nord2 rounded-xl transition-colors text-nord4 hover:text-nord11" title="Clear ALL avatars from folder (Admin)">
-                            <Trash2 size={16} strokeWidth={1.5} className="text-nord3 hover:text-nord11" />
-                        </button>
+                        {user?.is_admin && (
+                            <button onClick={avatarEditor.handleClearAllAvatars} className="p-2 hover:bg-nord2 rounded-xl transition-colors text-nord4 hover:text-nord11" title="Clear ALL avatars from folder (Admin)">
+                                <Trash2 size={16} strokeWidth={1.5} className="text-nord3 hover:text-nord11" />
+                            </button>
+                        )}
                         <button onClick={logout} className="p-2 hover:bg-nord2 rounded-xl transition-colors text-nord4 hover:text-nord11">
                             <LogOut size={18} strokeWidth={1.5} />
                         </button>

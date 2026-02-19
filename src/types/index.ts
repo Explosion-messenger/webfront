@@ -2,6 +2,7 @@ export interface User {
     id: number;
     username: string;
     avatar_path?: string;
+    is_admin: boolean;
     created_at: string;
 }
 
