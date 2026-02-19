@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/messenger-frontend
+  IMAGE_NAME: explosion-messenger/messenger-frontend
 
 jobs:
   build-and-push:
@@ -54,7 +54,7 @@ jobs:
             version: '3.8'
             services:
               frontend:
-                image: ghcr.io/${{ github.repository_owner }}/messenger-frontend:latest
+                image: ghcr.io/explosion-messenger/messenger-frontend:latest
                 restart: always
                 ports:
                   - "80:80"
