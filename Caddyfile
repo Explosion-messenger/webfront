@@ -18,6 +18,11 @@
         reverse_proxy backend:8000
     }
 
+    # Proxy to admin panel container
+    handle /admin/* {
+        reverse_proxy admin_panel:80
+    }
+
     # Handle WebSockets
     handle /ws* {
         reverse_proxy backend:8000
