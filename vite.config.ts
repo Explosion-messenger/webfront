@@ -18,6 +18,10 @@ export default defineConfig({
       '/avatars': {
         target: 'http://localhost:8000',
       },
+      '/admin': {
+        target: 'http://localhost:5174',
+        changeOrigin: true,
+      },
       '/files/download': {
         target: 'http://localhost:8000',
       },
