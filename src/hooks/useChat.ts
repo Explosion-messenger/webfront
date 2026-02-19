@@ -155,6 +155,19 @@ export function useAvatarEditor(refreshUser: () => Promise<void>) {
         try {
             await api.delete('/admin/avatars/clear');
             await refreshUser();
+            alert('All avatars cleared');
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleWipeSystem = async () => {
+        if (!window.confirm('DANGER: Wipe ALL messages, files, and avatars? System will be reset to near-zero state. THIS IS IRREVERSIBLE.')) return;
+        try {
+            await api.delete('/admin/system/wipe');
+            await refreshUser();
+            alert('System wipe complete: All media and history erased.');
+            window.location.reload(); // Force refresh to clear local state
         } catch (err) {
             console.error(err);
         }
@@ -164,6 +177,6 @@ export function useAvatarEditor(refreshUser: () => Promise<void>) {
         showAvatarEditor, setShowAvatarEditor,
         imgSrc, crop, setCrop, completedCrop, setCompletedCrop,
         imgRef, fileInputRef,
-        onSelectFile, handleAvatarSave, handleAvatarDelete, handleClearAllAvatars,
+        onSelectFile, handleAvatarSave, handleAvatarDelete, handleClearAllAvatars, handleWipeSystem,
     };
 }

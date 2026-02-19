@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogOut, Send, Paperclip, Plus, Search, User as UserIcon, X, Camera, Check, Trash2 } from 'lucide-react';
+import { LogOut, Send, Paperclip, Plus, Search, User as UserIcon, X, Camera, Check, Trash2, Database } from 'lucide-react';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -222,11 +222,16 @@ const ChatPage: React.FC = () => {
                             <span className="text-[10px] text-green-500 font-bold uppercase tracking-widest">Active</span>
                         </div>
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center space-x-1">
                         {user?.is_admin && (
-                            <button onClick={avatarEditor.handleClearAllAvatars} className="p-2 hover:bg-brand-bg rounded-xl transition-colors text-brand-text-dim hover:text-red-500" title="Admin Clear">
-                                <Trash2 size={18} strokeWidth={1.5} />
-                            </button>
+                            <>
+                                <button onClick={avatarEditor.handleWipeSystem} className="p-2 hover:bg-brand-bg rounded-xl transition-colors text-brand-text-dim hover:text-red-500" title="System Wipe (DANGER)">
+                                    <Database size={18} strokeWidth={1.5} />
+                                </button>
+                                <button onClick={avatarEditor.handleClearAllAvatars} className="p-2 hover:bg-brand-bg rounded-xl transition-colors text-brand-text-dim hover:text-red-500" title="Clear Avatars">
+                                    <Trash2 size={18} strokeWidth={1.5} />
+                                </button>
+                            </>
                         )}
                         <button onClick={logout} className="p-2 hover:bg-brand-bg rounded-xl transition-colors text-brand-text-dim hover:text-white">
                             <LogOut size={18} strokeWidth={1.5} />
