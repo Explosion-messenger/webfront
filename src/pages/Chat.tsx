@@ -41,7 +41,11 @@ const ChatPage: React.FC = () => {
     }, [activeChat?.id]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        // Reduced frequency of scroll to prevent fighting animations
+        const timer = setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+        return () => clearTimeout(timer);
     }, [messages]);
 
     // WebSocket Handlers
@@ -190,17 +194,17 @@ const ChatPage: React.FC = () => {
 
             {/* Sidebar */}
             <motion.div
-                initial={{ x: -20, opacity: 0 }}
+                initial={{ x: -10, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                className="w-80 border-r border-brand-border flex flex-col bg-brand-sidebar z-10"
+                className="w-80 border-r border-brand-border flex flex-col bg-brand-sidebar z-10 shrink-0"
             >
-                <div className="p-6 border-b border-brand-border flex items-center justify-between">
+                <div className="p-6 border-b border-brand-border flex items-center justify-between shrink-0">
                     <div className="flex items-center space-x-3">
                         <div className="relative group">
                             {user?.avatar_path ? (
                                 <img src={getAvatarUrl(user.avatar_path)!} alt={user.username} className="w-10 h-10 rounded-2xl object-cover border border-brand-border shadow-lg" />
                             ) : (
-                                <div className="w-10 h-10 bg-brand-accent rounded-2xl flex items-center justify-center font-bold text-white shadow-glow shadow-brand-accent/20">
+                                <div className="w-10 h-10 bg-brand-accent rounded-2xl flex items-center justify-center font-bold text-white shadow-glow">
                                     {user?.username?.[0].toUpperCase()}
                                 </div>
                             )}
@@ -233,13 +237,13 @@ const ChatPage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="p-4">
+                <div className="p-4 shrink-0">
                     <button onClick={() => setShowNewChat(true)} className="glow-button w-full border-none py-3 text-[10px] tracking-[0.2em] font-black uppercase">
                         New Connection
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto space-y-1 py-2">
+                <div className="flex-1 overflow-y-auto space-y-1 py-2 custom-scroll">
                     {chats.map(chat => (
                         <ChatListItem
                             key={chat.id}
@@ -254,17 +258,17 @@ const ChatPage: React.FC = () => {
             </motion.div>
 
             {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col relative z-10">
+            <div className="flex-1 flex flex-col relative z-10 bg-brand-bg/30">
                 <AnimatePresence mode="wait">
                     {activeChat ? (
                         <motion.div
                             key={activeChat.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="flex-1 flex flex-col"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex-1 flex flex-col min-h-0"
                         >
-                            <div className="p-4 glass-header flex items-center justify-between">
+                            <div className="p-4 glass-header flex items-center justify-between shrink-0">
                                 <div className="flex items-center">
                                     <div className="relative mr-4">
                                         {activeChat.is_group ? (
@@ -298,7 +302,7 @@ const ChatPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
                                 {messages.map((msg) => (
                                     <MessageBubble
                                         key={msg.id}
@@ -310,39 +314,36 @@ const ChatPage: React.FC = () => {
                                 <div ref={messagesEndRef} />
                             </div>
 
-                            <motion.form
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                onSubmit={sendMessage}
-                                className="p-6 border-t border-brand-border flex items-center space-x-4 bg-brand-sidebar/50"
-                            >
-                                <label className="cursor-pointer p-3 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-all border border-brand-border">
-                                    <Paperclip size={20} strokeWidth={1.5} className="text-brand-text-dim hover:text-brand-accent" />
-                                    <input type="file" className="hidden" onChange={handleFileUpload} />
-                                </label>
-                                <div className="flex-1 relative">
-                                    <input
-                                        type="text"
-                                        value={inputText}
-                                        onChange={(e) => setInputText(e.target.value)}
-                                        placeholder="Compose a secure message..."
-                                        className="w-full bg-slate-900 border border-brand-border rounded-2xl px-6 py-4 focus:outline-none focus:border-brand-accent transition-all text-sm text-brand-text placeholder:text-brand-text-dim/60 shadow-inner"
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={!inputText.trim()}
-                                    className="p-4 bg-brand-accent hover:bg-brand-accent/80 disabled:opacity-20 rounded-2xl text-white transition-all shadow-glow shadow-brand-accent/40 active:scale-95"
-                                >
-                                    <Send size={20} strokeWidth={2} />
-                                </button>
-                            </motion.form>
+                            <div className="p-6 border-t border-brand-border bg-brand-sidebar/50 shrink-0">
+                                <form onSubmit={sendMessage} className="flex items-center space-x-4">
+                                    <label className="cursor-pointer p-3 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-all border border-brand-border shrink-0">
+                                        <Paperclip size={20} strokeWidth={1.5} className="text-brand-text-dim hover:text-brand-accent" />
+                                        <input type="file" className="hidden" onChange={handleFileUpload} />
+                                    </label>
+                                    <div className="flex-1 relative">
+                                        <input
+                                            type="text"
+                                            value={inputText}
+                                            onChange={(e) => setInputText(e.target.value)}
+                                            placeholder="Compose a secure message..."
+                                            className="w-full bg-slate-900 border border-brand-border rounded-2xl px-6 py-4 focus:outline-none focus:border-brand-accent transition-all text-sm text-white placeholder:text-brand-text-dim/60 shadow-inner"
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={!inputText.trim()}
+                                        className="p-4 bg-brand-accent hover:bg-brand-accent/80 disabled:opacity-20 rounded-2xl text-white transition-all shadow-glow active:scale-95 shrink-0"
+                                    >
+                                        <Send size={20} strokeWidth={2} />
+                                    </button>
+                                </form>
+                            </div>
                         </motion.div>
                     ) : (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="flex-1 flex flex-col items-center justify-center text-brand-text-dim space-y-6 bg-brand-bg/50"
+                            className="flex-1 flex flex-col items-center justify-center text-brand-text-dim space-y-6"
                         >
                             <div className="w-24 h-24 bg-brand-card/50 border border-brand-border rounded-3xl flex items-center justify-center shadow-premium relative">
                                 <Send size={40} strokeWidth={1} className="text-brand-accent" />
@@ -356,6 +357,7 @@ const ChatPage: React.FC = () => {
                     )}
                 </AnimatePresence>
 
+                {/* Modals remain the same but use shrink-0 and robust flex */}
                 {/* New Chat Modal */}
                 <AnimatePresence>
                     {showNewChat && (
@@ -366,12 +368,12 @@ const ChatPage: React.FC = () => {
                             className="absolute inset-0 bg-brand-bg/95 backdrop-blur-2xl z-50 flex items-center justify-center p-6"
                         >
                             <motion.div
-                                initial={{ scale: 0.9, y: 20 }}
+                                initial={{ scale: 0.95, y: 10 }}
                                 animate={{ scale: 1, y: 0 }}
-                                exit={{ scale: 0.9, y: 20 }}
-                                className="bg-brand-card w-full max-w-lg rounded-[2.5rem] border border-brand-border shadow-3xl overflow-hidden"
+                                exit={{ scale: 0.95, y: 10 }}
+                                className="bg-brand-card w-full max-w-lg rounded-[2.5rem] border border-brand-border shadow-3xl overflow-hidden flex flex-col max-h-full"
                             >
-                                <div className="p-8 border-b border-brand-border flex justify-between items-center bg-brand-sidebar/50">
+                                <div className="p-8 border-b border-brand-border flex justify-between items-center bg-brand-sidebar/50 shrink-0">
                                     <div className="flex items-center space-x-4">
                                         {newChatMode !== 'select' && (
                                             <button onClick={() => setNewChatMode('select')} className="text-brand-text-dim hover:text-white transition-colors">
@@ -387,16 +389,16 @@ const ChatPage: React.FC = () => {
                                     </button>
                                 </div>
 
-                                <div className="p-10 bg-brand-bg/20">
+                                <div className="p-10 bg-brand-bg/20 overflow-y-auto custom-scroll">
                                     {newChatMode === 'select' ? (
                                         <div className="grid grid-cols-1 gap-6">
-                                            <button onClick={() => { setNewChatMode('private'); setUsers([]); setSearchQuery(''); }} className="group p-8 premium-card hover:border-brand-accent transition-all duration-500 text-left">
+                                            <button onClick={() => { setNewChatMode('private'); setUsers([]); setSearchQuery(''); }} className="group p-8 premium-card hover:border-brand-accent transition-colors duration-300 text-left">
                                                 <UserIcon size={32} className="text-brand-accent mb-4 group-hover:scale-110 transition-transform" />
                                                 <h4 className="text-lg font-bold text-white mb-1 uppercase tracking-wider">Secure DM</h4>
                                                 <p className="text-xs text-brand-text-dim uppercase tracking-widest font-bold opacity-60">End-to-end encrypted link</p>
                                             </button>
 
-                                            <button onClick={() => { setNewChatMode('group'); setUsers([]); setSearchQuery(''); setSelectedUserIds([]); }} className="group p-8 premium-card hover:border-green-500 transition-all duration-500 text-left">
+                                            <button onClick={() => { setNewChatMode('group'); setUsers([]); setSearchQuery(''); setSelectedUserIds([]); }} className="group p-8 premium-card hover:border-green-500 transition-colors duration-300 text-left">
                                                 <div className="flex -space-x-4 mb-4">
                                                     <UserIcon size={32} className="text-green-500 bg-brand-card rounded-2xl p-1.5 border border-brand-border" />
                                                     <UserIcon size={32} className="text-green-500 bg-brand-card rounded-2xl p-1.5 border border-brand-border" />
@@ -406,7 +408,7 @@ const ChatPage: React.FC = () => {
                                             </button>
                                         </div>
                                     ) : (
-                                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                                        <div className="animate-in fade-in duration-300">
                                             {newChatMode === 'group' && selectedUserIds.length > 0 && (
                                                 <div className="mb-8">
                                                     <input type="text" value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="GROUP IDENTITY" className="w-full bg-slate-900 border border-brand-accent rounded-2xl px-6 py-4 focus:outline-none text-xs tracking-[0.25em] uppercase font-black placeholder:text-brand-text-dim/30" />
@@ -429,10 +431,9 @@ const ChatPage: React.FC = () => {
                                                 <input type="text" value={searchQuery} onChange={(e) => searchUsers(e.target.value)} autoFocus placeholder="SCAN USER BASE..." className="w-full bg-slate-900 border border-brand-border rounded-2xl pl-12 pr-6 py-4 focus:outline-none focus:border-brand-accent text-xs tracking-[.4em] uppercase font-black placeholder:text-brand-text-dim/30" />
                                             </div>
 
-                                            <div className="space-y-4 max-h-72 overflow-y-auto mb-8 pr-2 custom-scroll">
+                                            <div className="space-y-4 mb-8">
                                                 {users.map(u => (
-                                                    <motion.div
-                                                        whileHover={{ x: 5 }}
+                                                    <div
                                                         key={u.id}
                                                         onClick={() => { if (newChatMode === 'private') createChat(u.id); else toggleUserSelection(u.id); }}
                                                         className={`p-4 premium-card flex items-center justify-between cursor-pointer group ${selectedUserIds.includes(u.id) ? 'border-brand-accent bg-brand-accent/5' : 'hover:border-slate-700'}`}
@@ -442,14 +443,14 @@ const ChatPage: React.FC = () => {
                                                             <span className="text-sm font-bold text-white uppercase tracking-widest">{u.username}</span>
                                                         </div>
                                                         {newChatMode === 'group' ? (selectedUserIds.includes(u.id) ? <Check size={18} className="text-brand-accent" /> : <Plus size={18} className="text-brand-text-dim group-hover:text-brand-accent" />) : <Send size={18} className="text-brand-accent opacity-0 group-hover:opacity-100 transition-opacity" />}
-                                                    </motion.div>
+                                                    </div>
                                                 ))}
                                             </div>
 
                                             {newChatMode === 'group' && selectedUserIds.length > 0 && (
                                                 <button onClick={() => createChat()} className="glow-button w-full border-none py-4 text-xs tracking-[0.3em] font-black uppercase">Initialize Interface</button>
                                             )}
-                                        </motion.div>
+                                        </div>
                                     )}
                                 </div>
                             </motion.div>
@@ -457,7 +458,7 @@ const ChatPage: React.FC = () => {
                     )}
                 </AnimatePresence>
 
-                {/* Avatar Editor Modal */}
+                {/* Avatar Editor Modal follows same logic */}
                 <AnimatePresence>
                     {avatarEditor.showAvatarEditor && (
                         <motion.div
@@ -467,19 +468,19 @@ const ChatPage: React.FC = () => {
                             className="absolute inset-0 bg-brand-bg/95 backdrop-blur-2xl z-[60] flex items-center justify-center p-6"
                         >
                             <motion.div
-                                initial={{ scale: 0.9 }}
+                                initial={{ scale: 0.95 }}
                                 animate={{ scale: 1 }}
-                                exit={{ scale: 0.9 }}
-                                className="bg-brand-card w-full max-w-xl rounded-[2.5rem] border border-brand-border shadow-3xl overflow-hidden"
+                                exit={{ scale: 0.95 }}
+                                className="bg-brand-card w-full max-w-xl rounded-[2.5rem] border border-brand-border shadow-3xl overflow-hidden flex flex-col max-h-[90vh]"
                             >
-                                <div className="p-8 border-b border-brand-border flex justify-between items-center bg-brand-sidebar/50">
+                                <div className="p-8 border-b border-brand-border flex justify-between items-center bg-brand-sidebar/50 shrink-0">
                                     <h3 className="text-xs uppercase tracking-[0.3em] font-black text-white">Neural Reprofiling</h3>
                                     <button onClick={() => avatarEditor.setShowAvatarEditor(false)} className="text-brand-text-dim hover:text-white transition-colors">
                                         <X size={24} strokeWidth={2} />
                                     </button>
                                 </div>
 
-                                <div className="p-10 flex flex-col items-center justify-center bg-brand-bg/40">
+                                <div className="p-10 flex flex-col items-center justify-center bg-brand-bg/40 overflow-hidden">
                                     {avatarEditor.imgSrc && (
                                         <ReactCrop
                                             crop={avatarEditor.crop}
@@ -500,7 +501,7 @@ const ChatPage: React.FC = () => {
                                     )}
                                 </div>
 
-                                <div className="p-8 bg-brand-sidebar/50 border-t border-brand-border">
+                                <div className="p-8 bg-brand-sidebar/50 border-t border-brand-border shrink-0">
                                     <button onClick={avatarEditor.handleAvatarSave} className="glow-button w-full border-none py-5 text-sm tracking-[0.4em] font-black uppercase flex items-center justify-center space-x-4">
                                         <Check size={20} strokeWidth={4} />
                                         <span>Update Profile</span>
