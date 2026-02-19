@@ -11,45 +11,84 @@ export function useWebSocket(
     onUserStatus: (userId: number, online: boolean) => void,
 ) {
     const ws = useRef<WebSocket | null>(null);
+    const reconnectAttempt = useRef(0);
+    const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isMounted = useRef(true);
+
+    // Store callbacks in refs to avoid stale closures
+    const onNewMessageRef = useRef(onNewMessage);
+    const onDeleteMessageRef = useRef(onDeleteMessage);
+    const onNewChatRef = useRef(onNewChat);
+    const onOnlineListRef = useRef(onOnlineList);
+    const onUserStatusRef = useRef(onUserStatus);
+
+    // Keep refs up to date on every render
+    useEffect(() => { onNewMessageRef.current = onNewMessage; }, [onNewMessage]);
+    useEffect(() => { onDeleteMessageRef.current = onDeleteMessage; }, [onDeleteMessage]);
+    useEffect(() => { onNewChatRef.current = onNewChat; }, [onNewChat]);
+    useEffect(() => { onOnlineListRef.current = onOnlineList; }, [onOnlineList]);
+    useEffect(() => { onUserStatusRef.current = onUserStatus; }, [onUserStatus]);
 
     useEffect(() => {
+        isMounted.current = true;
         if (!token) return;
 
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const socketUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
-        const socket = new WebSocket(socketUrl);
+        const connect = () => {
+            if (!isMounted.current) return;
 
-        socket.onmessage = async (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (data.type === 'new_message') {
-                    onNewMessage(data.data);
-                } else if (data.type === 'delete_message') {
-                    onDeleteMessage(data.data.message_id, data.data.chat_id);
-                } else if (data.type === 'new_chat') {
-                    onNewChat(data.data);
-                } else if (data.type === 'online_list') {
-                    onOnlineList(data.data);
-                } else if (data.type === 'user_status') {
-                    onUserStatus(data.data.user_id, data.data.online);
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const socketUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
+            const socket = new WebSocket(socketUrl);
+
+            socket.onopen = () => {
+                reconnectAttempt.current = 0;
+            };
+
+            socket.onmessage = async (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'new_message') {
+                        onNewMessageRef.current(data.data);
+                    } else if (data.type === 'delete_message') {
+                        onDeleteMessageRef.current(data.data.message_id, data.data.chat_id);
+                    } else if (data.type === 'new_chat') {
+                        onNewChatRef.current(data.data);
+                    } else if (data.type === 'online_list') {
+                        onOnlineListRef.current(data.data);
+                    } else if (data.type === 'user_status') {
+                        onUserStatusRef.current(data.data.user_id, data.data.online);
+                    }
+                } catch (err) {
+                    console.error('WS parse error:', err);
                 }
-            } catch (err) {
-                console.error('WS parse error:', err);
-            }
+            };
+
+            socket.onclose = () => {
+                if (!isMounted.current) return;
+                // Exponential backoff: 1s, 2s, 4s, 8s, ... capped at 30s
+                const delay = Math.min(1000 * Math.pow(2, reconnectAttempt.current), 30000);
+                console.log(`WS closed. Reconnecting in ${delay / 1000}s (attempt ${reconnectAttempt.current + 1})...`);
+                reconnectAttempt.current += 1;
+                reconnectTimer.current = setTimeout(connect, delay);
+            };
+
+            socket.onerror = (err) => console.error('WS error:', err);
+
+            ws.current = socket;
         };
 
-        socket.onclose = () => {
-            if (token) setTimeout(() => { }, 3000); // reconnect handled by effect re-run
+        connect();
+
+        return () => {
+            isMounted.current = false;
+            if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+            ws.current?.close();
         };
-
-        socket.onerror = (err) => console.error('WS error:', err);
-
-        ws.current = socket;
-        return () => socket.close();
     }, [token]);
 
     return ws;
 }
+
 
 export function useChats() {
     const [chats, setChats] = useState<Chat[]>([]);
