@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine as build-stage
+FROM node:20-alpine AS build-stage
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM caddy:2-alpine as production-stage
+FROM caddy:2-alpine AS production-stage
 
 WORKDIR /usr/share/caddy
 
