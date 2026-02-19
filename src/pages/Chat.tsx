@@ -329,9 +329,8 @@ const ChatPage: React.FC = () => {
                                             type="text"
                                             value={inputText}
                                             onChange={(e) => setInputText(e.target.value)}
-                                            disabled={isSending}
-                                            placeholder={isSending ? "Transmitting..." : "Compose a secure message..."}
-                                            className="w-full bg-slate-900 border border-brand-border rounded-2xl px-6 py-4 focus:outline-none focus:border-brand-accent transition-all text-sm text-white placeholder:text-brand-text-dim/60 shadow-inner disabled:opacity-50"
+                                            placeholder="Compose a secure message..."
+                                            className="w-full bg-slate-900 border border-brand-border rounded-2xl px-6 py-4 focus:outline-none focus:border-brand-accent transition-all text-sm text-white placeholder:text-brand-text-dim/60 shadow-inner"
                                         />
                                     </div>
                                     <button
