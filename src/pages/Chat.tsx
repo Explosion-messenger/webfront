@@ -46,6 +46,8 @@ const ChatPage: React.FC = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
     }, [messages]);
 
+    const [isSending, setIsSending] = useState(false);
+
     // WebSocket Handlers
     const handleNewMessage = (msg: Message) => {
         if (Number(activeChatIdRef.current) === Number(msg.chat_id)) {
@@ -104,12 +106,21 @@ const ChatPage: React.FC = () => {
 
     const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!inputText.trim() || !activeChat) return;
+        if (!inputText.trim() || !activeChat || isSending) return;
+
+        const text = inputText;
+        setInputText('');
+        setIsSending(true);
         try {
-            await api.post('/messages/send', { chat_id: activeChat.id, text: inputText });
-            setInputText('');
-        } catch (err) { console.error(err); }
+            await api.post('/messages/send', { chat_id: activeChat.id, text });
+        } catch (err) {
+            console.error(err);
+            setInputText(text); // Restore on error
+        } finally {
+            setIsSending(false);
+        }
     };
+
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -318,13 +329,14 @@ const ChatPage: React.FC = () => {
                                             type="text"
                                             value={inputText}
                                             onChange={(e) => setInputText(e.target.value)}
-                                            placeholder="Compose a secure message..."
-                                            className="w-full bg-slate-900 border border-brand-border rounded-2xl px-6 py-4 focus:outline-none focus:border-brand-accent transition-all text-sm text-white placeholder:text-brand-text-dim/60 shadow-inner"
+                                            disabled={isSending}
+                                            placeholder={isSending ? "Transmitting..." : "Compose a secure message..."}
+                                            className="w-full bg-slate-900 border border-brand-border rounded-2xl px-6 py-4 focus:outline-none focus:border-brand-accent transition-all text-sm text-white placeholder:text-brand-text-dim/60 shadow-inner disabled:opacity-50"
                                         />
                                     </div>
                                     <button
                                         type="submit"
-                                        disabled={!inputText.trim()}
+                                        disabled={!inputText.trim() || isSending}
                                         className="p-4 bg-brand-accent hover:bg-brand-accent/80 disabled:opacity-20 rounded-2xl text-white transition-all shadow-glow active:scale-95 shrink-0"
                                     >
                                         <Send size={20} strokeWidth={2} />
