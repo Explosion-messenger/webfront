@@ -75,9 +75,12 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive
                 {typingUsers && typingUsers.length > 0 ? (
                     <div className="flex items-center space-x-1.5 overflow-hidden">
                         <p className="text-xs text-green-400 font-bold truncate">
-                            {chat.is_group
-                                ? `${typingUsers[0].username} is typing...`
-                                : 'typing...'}
+                            {(() => {
+                                if (!chat.is_group) return 'typing';
+                                if (typingUsers.length === 1) return `${typingUsers[0].username} is typing`;
+                                if (typingUsers.length === 2) return `${typingUsers[0].username} & ${typingUsers[1].username} are typing`;
+                                return `${typingUsers[0].username}, ${typingUsers[1].username} & ${typingUsers.length - 2} more are typing`;
+                            })()}
                         </p>
                         <div className="flex space-x-0.5 shrink-0">
                             <span className="w-0.5 h-0.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />

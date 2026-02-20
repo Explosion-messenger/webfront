@@ -33,7 +33,7 @@ const ChatPage: React.FC = () => {
     const [messageToDelete, setMessageToDelete] = useState<number | null>(null);
     const [typingUsers, setTypingUsers] = useState<Record<number, Record<number, { username: string, timestamp: number }>>>({});
     const typingTimeoutRef = useRef<Record<number, Record<number, ReturnType<typeof setTimeout>>>>({});
-    const lastSentTypingRef = useRef<Record<number, boolean>>({});
+
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const activeChatIdRef = useRef<number | null>(null);
@@ -202,20 +202,37 @@ const ChatPage: React.FC = () => {
     };
 
     // Send typing status
+    const lastSentTypingTimeRef = useRef<Record<number, number>>({});
+
     useEffect(() => {
         if (!activeChat || !token) return;
 
+        const now = Date.now();
+        const lastSent = lastSentTypingTimeRef.current[activeChat.id] || 0;
         const isCurrentlyTyping = inputText.length > 0;
-        if (lastSentTypingRef.current[activeChat.id] === isCurrentlyTyping) return;
 
-        sendJson({
-            type: 'typing',
-            chat_id: activeChat.id,
-            is_typing: isCurrentlyTyping
-        });
-        lastSentTypingRef.current[activeChat.id] = isCurrentlyTyping;
+        // If user deleted all text, send "stopped typing" immediately
+        if (!isCurrentlyTyping && lastSent !== 0) {
+            sendJson({
+                type: 'typing',
+                chat_id: activeChat.id,
+                is_typing: false
+            });
+            lastSentTypingTimeRef.current[activeChat.id] = 0;
+            return;
+        }
 
-        // If typing, set a timeout to stop typing after 3 seconds of inactivity
+        // Send "typing" update if it's the first time or every 2 seconds (heartbeat)
+        if (isCurrentlyTyping && (now - lastSent > 2000)) {
+            sendJson({
+                type: 'typing',
+                chat_id: activeChat.id,
+                is_typing: true
+            });
+            lastSentTypingTimeRef.current[activeChat.id] = now;
+        }
+
+        // Set local timeout to send "stopped" if user stops typing
         if (isCurrentlyTyping) {
             const timeout = setTimeout(() => {
                 sendJson({
@@ -223,7 +240,7 @@ const ChatPage: React.FC = () => {
                     chat_id: activeChat.id,
                     is_typing: false
                 });
-                lastSentTypingRef.current[activeChat.id] = false;
+                lastSentTypingTimeRef.current[activeChat.id] = 0;
             }, 3000);
             return () => clearTimeout(timeout);
         }
