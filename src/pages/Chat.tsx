@@ -47,7 +47,10 @@ const ChatPage: React.FC = () => {
 
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
     const activeChatIdRef = useRef<number | null>(null);
+    const lastMessagesLengthRef = useRef(0);
+    const isInitialLoadRef = useRef(true);
 
     // Avatar Editor
     const avatarEditor = useAvatarEditor(
@@ -100,9 +103,51 @@ const ChatPage: React.FC = () => {
     }, [showNewChat]);
 
     useEffect(() => {
-        // Immediate scroll to bottom without delay to prevent "jumping"
-        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-    }, [messages]);
+        isInitialLoadRef.current = true;
+        lastMessagesLengthRef.current = 0;
+    }, [activeChat?.id]);
+
+    useEffect(() => {
+        if (messagesLoading || !messages.length || !isInitialLoadRef.current) return;
+
+        const firstUnread = messages.find(m =>
+            m.sender_id !== user?.id &&
+            !m.read_by.some(r => r.user_id === user?.id)
+        );
+
+        if (firstUnread) {
+            const el = document.getElementById(`msg-${firstUnread.id}`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'auto', block: 'start' });
+            } else {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+            }
+        } else {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+        }
+
+        isInitialLoadRef.current = false;
+        lastMessagesLengthRef.current = messages.length;
+    }, [messages, messagesLoading, user?.id]);
+
+    useEffect(() => {
+        if (isInitialLoadRef.current || messagesLoading) return;
+
+        const container = scrollContainerRef.current;
+        if (!container) return;
+
+        // Is user close to bottom? (within 150px)
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
+        const lastMsg = messages[messages.length - 1];
+        const isMyMsg = lastMsg?.sender_id === user?.id;
+        const isNewMsg = messages.length > lastMessagesLengthRef.current;
+
+        if (isNewMsg && (isNearBottom || isMyMsg)) {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        lastMessagesLengthRef.current = messages.length;
+    }, [messages, messagesLoading, user?.id]);
 
     const [isSending, setIsSending] = useState(false);
 
@@ -701,7 +746,7 @@ const ChatPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
+                            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
                                 <AnimatePresence mode="popLayout">
                                     {!messagesLoading ? (
                                         messages.map((msg, index) => {
