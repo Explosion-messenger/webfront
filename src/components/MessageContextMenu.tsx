@@ -22,7 +22,8 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({ message, chat, 
 
     const readers = message.read_by.map(rb => {
         const user = chat.members.find(m => m.id === rb.user_id);
-        return { user, read_at: rb.read_at };
+        const userReactions = (message.reactions || []).filter(re => re.user_id === rb.user_id);
+        return { user, read_at: rb.read_at, reactions: userReactions };
     }).filter(r => r.user !== undefined);
 
     useEffect(() => {
@@ -95,17 +96,28 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({ message, chat, 
                     readers.length > 0 ? (
                         readers.map((r, idx) => (
                             <div key={idx} className="flex items-center justify-between p-2 hover:bg-white/5 rounded-xl transition-colors group">
-                                <div className="flex items-center space-x-3">
+                                <div className="flex items-center space-x-3 overflow-hidden">
                                     {r.user?.avatar_path ? (
-                                        <img src={getAvatarUrl(r.user.avatar_path)!} className="w-6 h-6 rounded-lg object-cover border border-white/5" />
+                                        <img src={getAvatarUrl(r.user.avatar_path)!} className="w-6 h-6 rounded-lg object-cover border border-white/5 shrink-0" />
                                     ) : (
-                                        <div className="w-6 h-6 bg-slate-800 rounded-lg flex items-center justify-center">
+                                        <div className="w-6 h-6 bg-slate-800 rounded-lg flex items-center justify-center shrink-0">
                                             <UserIcon size={10} className="text-brand-text-dim" />
                                         </div>
                                     )}
-                                    <span className="text-[11px] font-bold text-white/90 truncate max-w-[100px]">{r.user?.username}</span>
+                                    <div className="flex items-center space-x-2 overflow-hidden">
+                                        <span className="text-[11px] font-bold text-white/90 truncate">{r.user?.username}</span>
+                                        {r.reactions.length > 0 && (
+                                            <div className="flex -space-x-1">
+                                                {r.reactions.map((re, ridx) => (
+                                                    <span key={ridx} className="text-[10px] filter drop-shadow-sm" title={re.emoji}>
+                                                        {re.emoji}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                <span className="text-[9px] font-medium text-brand-text-dim/40 uppercase group-hover:text-brand-text-dim/80 transition-colors">
+                                <span className="text-[9px] font-medium text-brand-text-dim/40 uppercase group-hover:text-brand-text-dim/80 transition-colors shrink-0">
                                     {format(new Date(r.read_at), 'HH:mm')}
                                 </span>
                             </div>
@@ -123,7 +135,12 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({ message, chat, 
                         </div>
                         {readers.length > 0 && (
                             <div className="flex justify-between items-center">
-                                <span className="text-[10px] uppercase font-bold text-brand-accent">Read</span>
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-[10px] uppercase font-bold text-brand-accent">Read</span>
+                                    {readers[0].reactions.length > 0 && (
+                                        <span className="text-xs filter drop-shadow-sm">{readers[0].reactions[0].emoji}</span>
+                                    )}
+                                </div>
                                 <span className="text-[10px] font-medium text-brand-accent">{format(new Date(readers[0].read_at), 'HH:mm, MMM d')}</span>
                             </div>
                         )}
