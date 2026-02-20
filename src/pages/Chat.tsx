@@ -32,7 +32,16 @@ const ChatPage: React.FC = () => {
     const activeChatIdRef = useRef<number | null>(null);
 
     // Avatar Editor
-    const avatarEditor = useAvatarEditor(refreshUser);
+    const avatarEditor = useAvatarEditor(
+        async (formData) => {
+            await api.post('/me/avatar', formData);
+            await refreshUser();
+        },
+        async () => {
+            await api.delete('/me/avatar');
+            await refreshUser();
+        }
+    );
 
     useEffect(() => {
         fetchChats();
@@ -541,6 +550,7 @@ const ChatPage: React.FC = () => {
                         <GroupSettingsModal
                             chat={activeChat}
                             currentUser={user}
+                            onlineUsers={onlineUsers}
                             onClose={() => setShowGroupSettings(false)}
                             onUpdate={(updatedChat) => {
                                 setChats(prev => prev.map(c => c.id === updatedChat.id ? updatedChat : c));

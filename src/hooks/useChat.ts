@@ -136,7 +136,7 @@ export function useMessages(activeChatId: number | null) {
     return { messages, setMessages, loading };
 }
 
-export function useAvatarEditor(refreshUser: () => Promise<void>) {
+export function useAvatarEditor(onSave: (formData: FormData) => Promise<void>, onDelete?: () => Promise<void>) {
     const [showAvatarEditor, setShowAvatarEditor] = useState(false);
     const [imgSrc, setImgSrc] = useState('');
     const [crop, setCrop] = useState<any>();
@@ -182,8 +182,7 @@ export function useAvatarEditor(refreshUser: () => Promise<void>) {
             const formData = new FormData();
             formData.append('file', blob, 'avatar.jpg');
             try {
-                await api.post('/me/avatar', formData);
-                await refreshUser();
+                await onSave(formData);
                 setShowAvatarEditor(false);
                 setImgSrc('');
             } catch (err) {
@@ -193,15 +192,13 @@ export function useAvatarEditor(refreshUser: () => Promise<void>) {
     };
 
     const handleAvatarDelete = async () => {
-        if (!window.confirm('Delete avatar?')) return;
+        if (!onDelete || !window.confirm('Delete avatar?')) return;
         try {
-            await api.delete('/me/avatar');
-            await refreshUser();
+            await onDelete();
         } catch (err) {
             console.error(err);
         }
     };
-
 
     return {
         showAvatarEditor, setShowAvatarEditor,

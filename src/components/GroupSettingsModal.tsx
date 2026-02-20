@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { X, Search, User as UserIcon, Plus, Trash2, Camera, LogOut, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import api from '../api';
 import { type Chat, type User } from '../types';
+import { useAvatarEditor } from '../hooks/useChat';
 
 interface GroupSettingsModalProps {
     chat: Chat;
@@ -10,13 +13,30 @@ interface GroupSettingsModalProps {
     onUpdate: (updatedChat: Chat) => void;
     onDelete: (chatId: number) => void;
     currentUser: User | null;
+    onlineUsers: Set<number>;
 }
 
-const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, onUpdate, onDelete, currentUser }) => {
+const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, onUpdate, onDelete, currentUser, onlineUsers }) => {
     const [name, setName] = useState(chat.name || '');
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<User[]>([]);
     const [isUpdating, setIsUpdating] = useState(false);
+
+    const avatarEditor = useAvatarEditor(
+        async (formData) => {
+            const resp = await api.post(`/chats/${chat.id}/avatar`, formData);
+            onUpdate(resp.data);
+        }
+    );
+
+    const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        const { width, height } = e.currentTarget;
+        const initialCrop = centerCrop(
+            makeAspectCrop({ unit: '%', width: 90 }, 1, width, height),
+            width, height
+        );
+        avatarEditor.setCrop(initialCrop);
+    };
 
     const handleUpdateName = async () => {
         if (!name.trim() || name === chat.name) return;
@@ -92,19 +112,6 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
         }
     };
 
-    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const formData = new FormData();
-        formData.append('file', file);
-        try {
-            const resp = await api.post(`/chats/${chat.id}/avatar`, formData);
-            onUpdate(resp.data);
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
     const getAvatarUrl = (path?: string) => path ? `/avatars/${path}` : null;
 
     return (
@@ -140,7 +147,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                                 <div className="absolute inset-0 bg-brand-bg/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
                                     <label className="cursor-pointer p-3 bg-brand-accent rounded-2xl hover:scale-110 transition-transform shadow-glow">
                                         <Camera size={24} className="text-white" />
-                                        <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+                                        <input type="file" ref={avatarEditor.fileInputRef} className="hidden" accept="image/*" onChange={avatarEditor.onSelectFile} />
                                     </label>
                                 </div>
                             </div>
@@ -182,13 +189,18 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                                 {chat.members.map(member => (
                                     <div key={member.id} className="p-4 premium-card flex items-center justify-between group">
                                         <div className="flex items-center space-x-4">
-                                            {member.avatar_path ? (
-                                                <img src={getAvatarUrl(member.avatar_path)!} className="w-8 h-8 rounded-lg object-cover border border-brand-border" />
-                                            ) : (
-                                                <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
-                                                    <UserIcon size={14} className="text-brand-text-dim" />
-                                                </div>
-                                            )}
+                                            <div className="relative">
+                                                {member.avatar_path ? (
+                                                    <img src={getAvatarUrl(member.avatar_path)!} className="w-8 h-8 rounded-lg object-cover border border-brand-border" />
+                                                ) : (
+                                                    <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
+                                                        <UserIcon size={14} className="text-brand-text-dim" />
+                                                    </div>
+                                                )}
+                                                {onlineUsers.has(member.id) && (
+                                                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-brand-card rounded-full" />
+                                                )}
+                                            </div>
                                             <span className="text-sm font-bold text-white uppercase tracking-wider">{member.username}</span>
                                             {member.id === currentUser?.id && (
                                                 <span className="text-[8px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded uppercase font-black">You</span>
@@ -271,6 +283,60 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                     </button>
                 </div>
             </motion.div>
+
+            {/* Avatar Editor Modal for Group */}
+            <AnimatePresence>
+                {avatarEditor.showAvatarEditor && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-brand-bg/95 backdrop-blur-2xl z-[60] flex items-center justify-center p-6"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0.95 }}
+                            className="bg-brand-card w-full max-w-xl rounded-[2.5rem] border border-brand-border shadow-3xl overflow-hidden flex flex-col max-h-[90vh]"
+                        >
+                            <div className="p-8 border-b border-brand-border flex justify-between items-center bg-brand-sidebar/50 shrink-0">
+                                <h3 className="text-xs uppercase tracking-[0.3em] font-black text-white">Group Visual Identity</h3>
+                                <button onClick={() => avatarEditor.setShowAvatarEditor(false)} className="text-brand-text-dim hover:text-white transition-colors">
+                                    <X size={24} strokeWidth={2} />
+                                </button>
+                            </div>
+
+                            <div className="p-10 flex flex-col items-center justify-center bg-brand-bg/40 overflow-hidden">
+                                {avatarEditor.imgSrc && (
+                                    <ReactCrop
+                                        crop={avatarEditor.crop}
+                                        onChange={(_, percentCrop) => avatarEditor.setCrop(percentCrop)}
+                                        onComplete={(c) => avatarEditor.setCompletedCrop(c)}
+                                        aspect={1}
+                                        circularCrop
+                                        className="max-h-[50vh] border-2 border-brand-border rounded-xl overflow-hidden shadow-2xl"
+                                    >
+                                        <img
+                                            ref={avatarEditor.imgRef}
+                                            alt="Crop target"
+                                            src={avatarEditor.imgSrc}
+                                            className="max-w-full block"
+                                            onLoad={onImageLoad}
+                                        />
+                                    </ReactCrop>
+                                )}
+                            </div>
+
+                            <div className="p-8 bg-brand-sidebar/50 border-t border-brand-border shrink-0">
+                                <button onClick={avatarEditor.handleAvatarSave} className="glow-button w-full border-none py-5 text-sm tracking-[0.4em] font-black uppercase flex items-center justify-center space-x-4">
+                                    <Check size={20} strokeWidth={4} />
+                                    <span>Update Group Sync</span>
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 };
