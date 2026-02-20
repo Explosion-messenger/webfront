@@ -239,7 +239,7 @@ const ChatPage: React.FC = () => {
 
         try {
             const ids = Array.from(selectedMsgIds);
-            await api.delete('/messages/bulk', { data: { message_ids: ids } });
+            await api.post('/messages/bulk/delete', { message_ids: ids });
             setMessages(prev => prev.filter(m => !selectedMsgIds.has(m.id)));
             setSelectedMsgIds(new Set());
             setIsSelectionMode(false);

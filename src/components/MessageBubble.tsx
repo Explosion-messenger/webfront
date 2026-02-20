@@ -162,13 +162,15 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, isGroup
                             >
                                 {renderTicks()}
                             </div>
-                            <button
-                                onClick={() => onDelete(msg.id)}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-white/80 hover:text-white"
-                                title="Delete message"
-                            >
-                                <Trash2 size={12} />
-                            </button>
+                            {!isSelectionMode && (
+                                <button
+                                    onClick={() => onDelete(msg.id)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-white/80 hover:text-white"
+                                    title="Delete message"
+                                >
+                                    <Trash2 size={12} />
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
