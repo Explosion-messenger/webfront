@@ -645,7 +645,7 @@ const ChatPage: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center space-x-2 shrink-0">
+                                <div className="flex items-center space-x-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                                     <div className={`flex items-center bg-slate-900/50 rounded-xl transition-all ${isMsgSearchOpen ? 'w-64 px-3' : 'w-0 overflow-hidden'}`}>
                                         <input
                                             type="text"
