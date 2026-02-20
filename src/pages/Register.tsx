@@ -1,22 +1,43 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
 
 const Register: React.FC = () => {
     const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [verificationCode, setVerificationCode] = useState('');
+    const [isVerifying, setIsVerifying] = useState(false);
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
         try {
-            await api.post('/register', { username, password });
-            navigate('/login');
+            await api.post('/register', { username, email, password });
+            setIsVerifying(true);
         } catch (err: any) {
             setError(err.response?.data?.detail || 'Registration failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyEmail = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+        try {
+            await api.post('/verify-email', { username, code: verificationCode });
+            navigate('/login');
+        } catch (err: any) {
+            setError(err.response?.data?.detail || 'Verification failed');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -37,48 +58,121 @@ const Register: React.FC = () => {
                         transition={{ delay: 0.2 }}
                     >
                         <h1 className="text-4xl font-black text-white tracking-widest uppercase mb-2">Join Node</h1>
-                        <p className="text-brand-accent text-[10px] font-bold tracking-[0.4em] uppercase opacity-80">Allocate Identity</p>
+                        <p className="text-brand-accent text-[10px] font-bold tracking-[0.4em] uppercase opacity-80">
+                            {isVerifying ? 'Confirm Identity' : 'Allocate Identity'}
+                        </p>
                     </motion.div>
                 </div>
 
-                {error && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        className="p-4 text-xs font-bold uppercase tracking-widest text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl"
-                    >
-                        {error}
-                    </motion.div>
-                )}
+                <AnimatePresence mode="wait">
+                    {error && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="p-4 text-xs font-bold uppercase tracking-widest text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl overflow-hidden"
+                        >
+                            {error}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
-                <form className="space-y-6" onSubmit={handleSubmit}>
-                    <div className="space-y-2">
-                        <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-brand-text-dim ml-1">Desired Username</label>
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-white transition-all shadow-inner"
-                            required
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-brand-text-dim ml-1">Access Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-white transition-all shadow-inner"
-                            required
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        className="glow-button w-full border-none py-4 text-xs font-black uppercase tracking-[0.35em] mt-4 shadow-[0_0_20px_rgba(34,197,94,0.2)] bg-brand-accent"
-                    >
-                        Register Node
-                    </button>
-                </form>
+                <AnimatePresence mode="wait">
+                    {!isVerifying ? (
+                        <motion.form
+                            key="register"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            className="space-y-6"
+                            onSubmit={handleRegister}
+                        >
+                            <div className="space-y-2">
+                                <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-brand-text-dim ml-1">Desired Username</label>
+                                <input
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-white transition-all shadow-inner"
+                                    required
+                                    disabled={loading}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-brand-text-dim ml-1">Secure Email</label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-white transition-all shadow-inner"
+                                    required
+                                    disabled={loading}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-brand-text-dim ml-1">Access Password</label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-white transition-all shadow-inner"
+                                    required
+                                    disabled={loading}
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="glow-button w-full border-none py-4 text-xs font-black uppercase tracking-[0.35em] mt-4 shadow-[0_0_20px_rgba(34,197,94,0.2)] bg-brand-accent disabled:opacity-50"
+                            >
+                                {loading ? 'Processing...' : 'Register Node'}
+                            </button>
+                        </motion.form>
+                    ) : (
+                        <motion.form
+                            key="verify"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                            onSubmit={handleVerifyEmail}
+                        >
+                            <div className="text-center p-4 bg-brand-accent/5 rounded-2xl border border-brand-accent/10 mb-4">
+                                <p className="text-[10px] font-bold text-brand-text-dim uppercase tracking-widest leading-relaxed">
+                                    A transmission has been sent to <span className="text-brand-accent">{email}</span>. <br />
+                                    Enter the verification key to activate your node.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-brand-text-dim ml-1">Verification Key</label>
+                                <input
+                                    type="text"
+                                    value={verificationCode}
+                                    onChange={(e) => setVerificationCode(e.target.value)}
+                                    className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-center text-2xl font-black text-brand-accent tracking-[0.5em] transition-all shadow-inner"
+                                    placeholder="000000"
+                                    maxLength={6}
+                                    required
+                                    disabled={loading}
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="glow-button w-full border-none py-4 text-xs font-black uppercase tracking-[0.35em] mt-4 shadow-[0_0_20px_rgba(34,197,94,0.2)] bg-brand-accent disabled:opacity-50"
+                            >
+                                {loading ? 'Verifying...' : 'Validate Node'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsVerifying(false)}
+                                className="w-full py-2 text-[9px] font-bold text-brand-text-dim hover:text-white uppercase tracking-widest transition-colors"
+                            >
+                                Back to Registration
+                            </button>
+                        </motion.form>
+                    )}
+                </AnimatePresence>
 
                 <p className="text-center text-brand-text-dim text-[10px] font-bold uppercase tracking-widest pt-4">
                     Already specialized?{' '}
@@ -92,3 +186,4 @@ const Register: React.FC = () => {
 };
 
 export default Register;
+
