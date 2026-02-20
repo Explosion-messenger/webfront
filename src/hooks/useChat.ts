@@ -10,6 +10,7 @@ export function useWebSocket(
     onChatUpdated: (data: any) => void,
     onOnlineList: (ids: number[]) => void,
     onUserStatus: (userId: number, online: boolean) => void,
+    onMessageRead: (data: { message_id: number, chat_id: number, user_id: number, read_at: string }) => void,
 ) {
     const ws = useRef<WebSocket | null>(null);
     const reconnectAttempt = useRef(0);
@@ -23,6 +24,7 @@ export function useWebSocket(
     const onChatUpdatedRef = useRef(onChatUpdated);
     const onOnlineListRef = useRef(onOnlineList);
     const onUserStatusRef = useRef(onUserStatus);
+    const onMessageReadRef = useRef(onMessageRead);
 
     // Keep refs up to date on every render
     useEffect(() => { onNewMessageRef.current = onNewMessage; }, [onNewMessage]);
@@ -31,6 +33,7 @@ export function useWebSocket(
     useEffect(() => { onChatUpdatedRef.current = onChatUpdated; }, [onChatUpdated]);
     useEffect(() => { onOnlineListRef.current = onOnlineList; }, [onOnlineList]);
     useEffect(() => { onUserStatusRef.current = onUserStatus; }, [onUserStatus]);
+    useEffect(() => { onMessageReadRef.current = onMessageRead; }, [onMessageRead]);
 
     useEffect(() => {
         isMounted.current = true;
@@ -62,6 +65,8 @@ export function useWebSocket(
                         onOnlineListRef.current(data.data);
                     } else if (data.type === 'user_status') {
                         onUserStatusRef.current(data.data.user_id, data.data.online);
+                    } else if (data.type === 'message_read') {
+                        onMessageReadRef.current(data.data);
                     }
                 } catch (err) {
                     console.error('WS parse error:', err);

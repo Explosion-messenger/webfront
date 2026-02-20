@@ -10,6 +10,7 @@ import { type Chat, type Message, type User } from '../types';
 import ChatListItem from '../components/ChatListItem';
 import MessageBubble from '../components/MessageBubble';
 import GroupSettingsModal from '../components/GroupSettingsModal';
+import ReadReceiptsModal from '../components/ReadReceiptsModal';
 import { centerCrop, makeAspectCrop } from 'react-image-crop';
 
 const ChatPage: React.FC = () => {
@@ -27,6 +28,7 @@ const ChatPage: React.FC = () => {
     const [groupName, setGroupName] = useState('');
     const [newChatMode, setNewChatMode] = useState<'select' | 'private' | 'group'>('select');
     const [showGroupSettings, setShowGroupSettings] = useState(false);
+    const [selectedMessageForReceipts, setSelectedMessageForReceipts] = useState<Message | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const activeChatIdRef = useRef<number | null>(null);
@@ -116,6 +118,16 @@ const ChatPage: React.FC = () => {
 
     const handleOnlineList = (ids: number[]) => setOnlineUsers(new Set(ids));
 
+    const handleMessageRead = (data: { message_id: number, chat_id: number, user_id: number, read_at: string }) => {
+        setMessages(prev => prev.map(m => {
+            if (m.id === data.message_id) {
+                if (m.read_by.some(r => r.user_id === data.user_id)) return m;
+                return { ...m, read_by: [...m.read_by, { user_id: data.user_id, read_at: data.read_at }] };
+            }
+            return m;
+        }));
+    };
+
     const handleUserStatus = (userId: number, online: boolean) => {
         setOnlineUsers(prev => {
             const newSet = new Set(prev);
@@ -125,7 +137,15 @@ const ChatPage: React.FC = () => {
         });
     };
 
-    useWebSocket(token, handleNewMessage, handleDeleteMessage, handleNewChat, handleChatUpdated, handleOnlineList, handleUserStatus);
+    useWebSocket(token, handleNewMessage, handleDeleteMessage, handleNewChat, handleChatUpdated, handleOnlineList, handleUserStatus, handleMessageRead);
+
+    const markMessageRead = async (messageId: number) => {
+        try {
+            await api.post(`/messages/${messageId}/read`);
+        } catch (err) {
+            console.error('Failed to mark message read:', err);
+        }
+    };
 
     const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -337,7 +357,10 @@ const ChatPage: React.FC = () => {
                                                 key={msg.id}
                                                 msg={msg}
                                                 currentUser={user}
+                                                isGroup={activeChat.is_group}
                                                 onDelete={deleteMessage}
+                                                onRead={markMessageRead}
+                                                onReadReceiptsClick={setSelectedMessageForReceipts}
                                             />
                                         ))
                                     ) : (
@@ -561,6 +584,16 @@ const ChatPage: React.FC = () => {
                                 setActiveChat(null);
                                 setShowGroupSettings(false);
                             }}
+                        />
+                    )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                    {selectedMessageForReceipts && activeChat && (
+                        <ReadReceiptsModal
+                            message={selectedMessageForReceipts}
+                            chat={activeChat}
+                            onClose={() => setSelectedMessageForReceipts(null)}
                         />
                     )}
                 </AnimatePresence>

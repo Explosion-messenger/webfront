@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { format } from 'date-fns';
-import { FileIcon, Trash2 } from 'lucide-react';
+import { FileIcon, Trash2, Check, CheckCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { type Message, type User } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -8,15 +8,59 @@ import { useAuth } from '../context/AuthContext';
 interface MessageBubbleProps {
     msg: Message;
     currentUser: User | null;
+    isGroup: boolean;
     onDelete: (id: number) => void;
+    onRead?: (id: number) => void;
+    onReadReceiptsClick?: (msg: Message) => void;
 }
 
 const getAvatarUrl = (path?: string) => path ? `/avatars/${path}` : null;
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, onDelete }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, isGroup, onDelete, onRead, onReadReceiptsClick }) => {
     const { token } = useAuth();
     const isMe = msg.sender_id === currentUser?.id;
     const downloadUrl = (path: string) => `/files/download/${path}${token ? `?token=${token}` : ''}`;
+    const bubbleRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (isMe || !onRead || !currentUser || !bubbleRef.current) return;
+
+        const alreadyRead = msg.read_by?.some(r => r.user_id === currentUser.id);
+        if (alreadyRead) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    onRead(msg.id);
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.5 }
+        );
+
+        observer.observe(bubbleRef.current);
+        return () => observer.disconnect();
+    }, [msg.id, isMe, onRead, currentUser, msg.read_by]);
+
+    const renderTicks = () => {
+        if (!isMe) return null;
+
+        const readCount = msg.read_by?.length || 0;
+        const isReadByOthers = readCount > 0;
+
+        if (!isReadByOthers) {
+            return <Check size={12} className="text-white/40" />;
+        }
+
+        if (isGroup) {
+            if (readCount === 1) {
+                return <CheckCheck size={12} className="text-[#bf97ff] drop-shadow-[0_0_3px_rgba(191,151,255,0.8)]" />;
+            }
+            return <CheckCheck size={12} className="text-[#22c55e] drop-shadow-[0_0_3px_rgba(34,197,94,0.8)]" />;
+        }
+
+        return <CheckCheck size={12} className="text-[#22c55e]" />;
+    };
 
     return (
         <motion.div
@@ -41,10 +85,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, onDelet
             </div>
 
             {/* Bubble */}
-            <div className={`group relative max-w-[75%] p-4 rounded-2xl shadow-premium border transition-shadow ${isMe
-                ? 'bg-brand-accent border-brand-accent/20 text-white rounded-br-none'
-                : 'bg-brand-card border-brand-border text-brand-text rounded-bl-none'
-                }`}>
+            <div
+                ref={bubbleRef}
+                className={`group relative max-w-[75%] p-4 rounded-2xl shadow-premium border transition-shadow ${isMe
+                    ? 'bg-brand-accent border-brand-accent/20 text-white rounded-br-none'
+                    : 'bg-brand-card border-brand-border text-brand-text rounded-bl-none'
+                    }`}>
                 {!isMe && (
                     <span className="block text-[10px] uppercase tracking-widest font-bold text-brand-accent mb-1">
                         {msg.sender.username}
@@ -84,13 +130,21 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, onDelet
                         {format(new Date(msg.created_at), 'HH:mm')}
                     </span>
                     {isMe && (
-                        <button
-                            onClick={() => onDelete(msg.id)}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-white/80 hover:text-white"
-                            title="Delete message"
-                        >
-                            <Trash2 size={12} />
-                        </button>
+                        <div className="flex items-center space-x-2">
+                            <div
+                                onClick={() => isGroup && onReadReceiptsClick?.(msg)}
+                                className={isGroup && msg.read_by.length > 0 ? 'cursor-pointer hover:scale-110 transition-transform' : ''}
+                            >
+                                {renderTicks()}
+                            </div>
+                            <button
+                                onClick={() => onDelete(msg.id)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-white/80 hover:text-white"
+                                title="Delete message"
+                            >
+                                <Trash2 size={12} />
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>

@@ -14,6 +14,11 @@ export interface MessageFile {
     size: number;
 }
 
+export interface MessageRead {
+    user_id: number;
+    read_at: string;
+}
+
 export interface Message {
     id: number;
     chat_id: number;
@@ -22,6 +27,7 @@ export interface Message {
     text?: string;
     file?: MessageFile;
     created_at: string;
+    read_by: MessageRead[];
 }
 
 export interface Chat {
