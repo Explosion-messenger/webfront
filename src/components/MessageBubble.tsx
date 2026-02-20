@@ -49,17 +49,17 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, isGroup
         const isReadByOthers = readCount > 0;
 
         if (!isReadByOthers) {
-            return <Check size={12} className="text-white/40" />;
+            return <Check size={13} strokeWidth={3} className="text-white/60" />;
         }
 
         if (isGroup) {
             if (readCount === 1) {
-                return <CheckCheck size={12} className="text-[#bf97ff] drop-shadow-[0_0_3px_rgba(191,151,255,0.8)]" />;
+                return <CheckCheck size={13} strokeWidth={3} className="text-[#bf97ff] drop-shadow-[0_0_3px_rgba(191,151,255,0.8)]" />;
             }
-            return <CheckCheck size={12} className="text-[#22c55e] drop-shadow-[0_0_3px_rgba(34,197,94,0.8)]" />;
+            return <CheckCheck size={13} strokeWidth={3} className="text-[#22c55e] drop-shadow-[0_0_3px_rgba(34,197,94,0.8)]" />;
         }
 
-        return <CheckCheck size={12} className="text-[#22c55e]" />;
+        return <CheckCheck size={13} strokeWidth={3} className="text-[#22c55e]" />;
     };
 
     return (
