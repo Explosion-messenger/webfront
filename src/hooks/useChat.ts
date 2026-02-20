@@ -11,6 +11,7 @@ export function useWebSocket(
     onOnlineList: (ids: number[]) => void,
     onUserStatus: (userId: number, online: boolean) => void,
     onMessageRead: (data: { message_id: number, chat_id: number, user_id: number, read_at: string }) => void,
+    onTyping: (data: { chat_id: number, user_id: number, is_typing: boolean }) => void,
 ) {
     const ws = useRef<WebSocket | null>(null);
     const reconnectAttempt = useRef(0);
@@ -25,6 +26,7 @@ export function useWebSocket(
     const onOnlineListRef = useRef(onOnlineList);
     const onUserStatusRef = useRef(onUserStatus);
     const onMessageReadRef = useRef(onMessageRead);
+    const onTypingRef = useRef(onTyping);
 
     // Keep refs up to date on every render
     useEffect(() => { onNewMessageRef.current = onNewMessage; }, [onNewMessage]);
@@ -34,6 +36,7 @@ export function useWebSocket(
     useEffect(() => { onOnlineListRef.current = onOnlineList; }, [onOnlineList]);
     useEffect(() => { onUserStatusRef.current = onUserStatus; }, [onUserStatus]);
     useEffect(() => { onMessageReadRef.current = onMessageRead; }, [onMessageRead]);
+    useEffect(() => { onTypingRef.current = onTyping; }, [onTyping]);
 
     useEffect(() => {
         isMounted.current = true;
@@ -67,6 +70,8 @@ export function useWebSocket(
                         onUserStatusRef.current(data.data.user_id, data.data.online);
                     } else if (data.type === 'message_read') {
                         onMessageReadRef.current(data.data);
+                    } else if (data.type === 'typing') {
+                        onTypingRef.current(data.data);
                     }
                 } catch (err) {
                     console.error('WS parse error:', err);
@@ -96,7 +101,13 @@ export function useWebSocket(
         };
     }, [token]);
 
-    return ws;
+    const sendJson = (data: any) => {
+        if (ws.current?.readyState === WebSocket.OPEN) {
+            ws.current.send(JSON.stringify(data));
+        }
+    };
+
+    return { ws, sendJson };
 }
 
 

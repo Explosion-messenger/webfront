@@ -31,6 +31,9 @@ const ChatPage: React.FC = () => {
     const [showGroupSettings, setShowGroupSettings] = useState(false);
     const [selectedMessageForReceipts, setSelectedMessageForReceipts] = useState<Message | null>(null);
     const [messageToDelete, setMessageToDelete] = useState<number | null>(null);
+    const [typingUsers, setTypingUsers] = useState<Record<number, Record<number, { username: string, timestamp: number }>>>({});
+    const typingTimeoutRef = useRef<Record<number, Record<number, ReturnType<typeof setTimeout>>>>({});
+    const lastSentTypingRef = useRef<Record<number, boolean>>({});
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const activeChatIdRef = useRef<number | null>(null);
@@ -161,7 +164,39 @@ const ChatPage: React.FC = () => {
         });
     };
 
-    useWebSocket(token, handleNewMessage, handleDeleteMessage, handleNewChat, handleChatUpdated, handleOnlineList, handleUserStatus, handleMessageRead);
+    const handleTyping = (data: { chat_id: number, user_id: number, is_typing: boolean }) => {
+        const chat = chats.find(c => c.id === data.chat_id);
+        if (!chat) return;
+        const member = chat.members.find(m => m.id === data.user_id);
+        if (!member) return;
+
+        setTypingUsers(prev => {
+            const chatTyping = { ...(prev[data.chat_id] || {}) };
+            if (data.is_typing) {
+                chatTyping[data.user_id] = { username: member.username, timestamp: Date.now() };
+            } else {
+                delete chatTyping[data.user_id];
+            }
+            return { ...prev, [data.chat_id]: chatTyping };
+        });
+
+        // Auto-clear after 5 seconds if no "stopped typing" received
+        if (data.is_typing) {
+            if (typingTimeoutRef.current[data.chat_id]?.[data.user_id]) {
+                clearTimeout(typingTimeoutRef.current[data.chat_id][data.user_id]);
+            }
+            const timeout = setTimeout(() => {
+                handleTyping({ ...data, is_typing: false });
+            }, 5000);
+
+            typingTimeoutRef.current[data.chat_id] = {
+                ...(typingTimeoutRef.current[data.chat_id] || {}),
+                [data.user_id]: timeout
+            };
+        }
+    };
+
+    const { ws, sendJson } = useWebSocket(token, handleNewMessage, handleDeleteMessage, handleNewChat, handleChatUpdated, handleOnlineList, handleUserStatus, handleMessageRead, handleTyping);
 
     const markMessageRead = async (messageId: number) => {
         try {
@@ -170,6 +205,34 @@ const ChatPage: React.FC = () => {
             console.error('Failed to mark message read:', err);
         }
     };
+
+    // Send typing status
+    useEffect(() => {
+        if (!activeChat || !token) return;
+
+        const isCurrentlyTyping = inputText.length > 0;
+        if (lastSentTypingRef.current[activeChat.id] === isCurrentlyTyping) return;
+
+        sendJson({
+            type: 'typing',
+            chat_id: activeChat.id,
+            is_typing: isCurrentlyTyping
+        });
+        lastSentTypingRef.current[activeChat.id] = isCurrentlyTyping;
+
+        // If typing, set a timeout to stop typing after 3 seconds of inactivity
+        if (isCurrentlyTyping) {
+            const timeout = setTimeout(() => {
+                sendJson({
+                    type: 'typing',
+                    chat_id: activeChat.id,
+                    is_typing: false
+                });
+                lastSentTypingRef.current[activeChat.id] = false;
+            }, 3000);
+            return () => clearTimeout(timeout);
+        }
+    }, [inputText, activeChat?.id]);
 
     const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -361,9 +424,40 @@ const ChatPage: React.FC = () => {
                                     </div>
                                     <div className="min-w-0">
                                         <h2 className="font-bold text-lg tracking-tight text-white truncate">{getChatName(activeChat)}</h2>
-                                        <p className="text-[10px] font-bold text-brand-text-dim uppercase tracking-[0.15em] truncate">
-                                            {activeChat.is_group ? `${activeChat.members.length} Members` : isUserOnline(activeChat) ? 'Online' : 'Offline'}
-                                        </p>
+                                        <div className="flex items-center space-x-2">
+                                            {(() => {
+                                                const typingInChat = Object.values(typingUsers[activeChat.id] || {});
+                                                if (typingInChat.length > 0) {
+                                                    let text = '';
+                                                    if (!activeChat.is_group) {
+                                                        text = 'typing';
+                                                    } else {
+                                                        if (typingInChat.length === 1) {
+                                                            text = `${typingInChat[0].username} is typing`;
+                                                        } else if (typingInChat.length === 2) {
+                                                            text = `${typingInChat[0].username}, ${typingInChat[1].username} are typing`;
+                                                        } else {
+                                                            text = `${typingInChat[0].username}, ${typingInChat[1].username} and ${typingInChat.length - 2} others are typing`;
+                                                        }
+                                                    }
+                                                    return (
+                                                        <div className="flex items-center space-x-1.5 overflow-hidden">
+                                                            <span className="text-[10px] font-black text-green-500 uppercase tracking-[0.2em]">{text}</span>
+                                                            <div className="flex space-x-0.5">
+                                                                <span className="w-0.5 h-0.5 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                                                <span className="w-0.5 h-0.5 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                                                <span className="w-0.5 h-0.5 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+                                                return (
+                                                    <p className="text-[10px] font-bold text-brand-text-dim uppercase tracking-[0.15em] truncate">
+                                                        {activeChat.is_group ? `${activeChat.members.length} Members` : isUserOnline(activeChat) ? 'Online' : 'Offline'}
+                                                    </p>
+                                                );
+                                            })()}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex space-x-2 shrink-0">
