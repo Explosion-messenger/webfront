@@ -45,6 +45,10 @@ const ChatPage: React.FC = () => {
     const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
     const [highlightedMsgId, setHighlightedMsgId] = useState<number | null>(null);
 
+    // Chat Actions Context Menu
+    const [chatMenuPos, setChatMenuPos] = useState<{ x: number, y: number } | null>(null);
+    const [chatMenuTarget, setChatMenuTarget] = useState<Chat | null>(null);
+
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -262,6 +266,52 @@ const ChatPage: React.FC = () => {
         }
     };
 
+    const handleUserUpdated = ({ id, avatar_path }: { id: number, username: string, avatar_path: string | null }) => {
+        setChats(prev => prev.map(chat => ({
+            ...chat,
+            members: chat.members.map(m => m.id === id ? { ...m, avatar_path: avatar_path || undefined } : m)
+        })));
+        setMessages(prev => prev.map(msg => ({
+            ...msg,
+            sender: msg.sender_id === id ? { ...msg.sender, avatar_path: avatar_path || undefined } : msg.sender
+        })));
+        if (user?.id === id) {
+            refreshUser();
+        }
+    };
+
+    const handleLeaveChat = async (chat: Chat) => {
+        if (!window.confirm(`Are you sure you want to leave ${chat.is_group ? 'this group' : 'this chat'}?`)) return;
+        try {
+            await api.post(`/chats/${chat.id}/leave`);
+            handleChatDeleted(chat.id);
+        } catch (err) {
+            console.error('Failed to leave chat:', err);
+        } finally {
+            setChatMenuPos(null);
+            setChatMenuTarget(null);
+        }
+    };
+
+    const handleDeleteChatAccount = async (chat: Chat) => {
+        if (!window.confirm('Are you sure you want to delete this chat and ALL its history for everyone? This cannot be undone.')) return;
+        try {
+            await api.delete(`/chats/${chat.id}`);
+            // No need to manually call handleChatDeleted, WS will broadcast it
+        } catch (err) {
+            console.error('Failed to delete chat:', err);
+        } finally {
+            setChatMenuPos(null);
+            setChatMenuTarget(null);
+        }
+    };
+
+    const onChatContextMenu = (e: React.MouseEvent, chat: Chat) => {
+        e.preventDefault();
+        setChatMenuPos({ x: e.clientX, y: e.clientY });
+        setChatMenuTarget(chat);
+    };
+
     const markMessageRead = async (messageId: number) => {
         try {
             await api.post(`/messages/${messageId}/read`);
@@ -308,7 +358,19 @@ const ChatPage: React.FC = () => {
         setSelectedMsgIds(new Set());
     };
 
-    const { sendJson } = useWebSocket(token, handleNewMessage, handleDeleteMessage, handleNewChat, handleChatUpdated, handleOnlineList, handleUserStatus, handleMessageRead, handleTyping, handleChatDeleted);
+    const { sendJson } = useWebSocket(
+        token,
+        handleNewMessage,
+        handleDeleteMessage,
+        handleNewChat,
+        handleChatUpdated,
+        handleOnlineList,
+        handleUserStatus,
+        handleMessageRead,
+        handleTyping,
+        handleChatDeleted,
+        handleUserUpdated
+    );
 
     // Inactivity / Away Status Logic
     const lastSentStatusRef = useRef<'online' | 'away'>('online');
@@ -606,6 +668,7 @@ const ChatPage: React.FC = () => {
                             userStatus={getUserStatus(chat)}
                             typingUsers={Object.values(typingUsers[chat.id] || {})}
                             onClick={() => setActiveChat(chat)}
+                            onContextMenu={(e) => onChatContextMenu(e, chat)}
                         />
                     ))}
                 </div>
@@ -1027,6 +1090,55 @@ const ChatPage: React.FC = () => {
                             }}
                             onCancel={() => setMessageToDelete(null)}
                         />
+                    )}
+                </AnimatePresence>
+
+                {/* Chat Context Menu */}
+                <AnimatePresence>
+                    {chatMenuPos && chatMenuTarget && (
+                        <>
+                            <div
+                                className="fixed inset-0 z-[60]"
+                                onClick={() => { setChatMenuPos(null); setChatMenuTarget(null); }}
+                                onContextMenu={(e) => { e.preventDefault(); setChatMenuPos(null); setChatMenuTarget(null); }}
+                            />
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                style={{
+                                    position: 'fixed',
+                                    left: Math.min(chatMenuPos.x, window.innerWidth - 200),
+                                    top: Math.min(chatMenuPos.y, window.innerHeight - 150),
+                                    zIndex: 100
+                                }}
+                                className="w-48 bg-brand-sidebar/95 backdrop-blur-xl border border-brand-border rounded-2xl shadow-2xl overflow-hidden p-1.5"
+                            >
+                                <div className="px-3 py-2 border-b border-brand-border/50 mb-1">
+                                    <p className="text-[10px] font-black text-brand-text-dim uppercase tracking-widest truncate">
+                                        {chatMenuTarget.is_group ? chatMenuTarget.name : chatMenuTarget.members.find(m => m.id !== user?.id)?.username}
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={() => handleLeaveChat(chatMenuTarget)}
+                                    className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-brand-text-dim hover:text-white hover:bg-white/5 transition-all text-sm group"
+                                >
+                                    <LogOut size={16} className="group-hover:text-amber-500 transition-colors" />
+                                    <span>Leave Chat</span>
+                                </button>
+
+                                {!chatMenuTarget.is_group && (
+                                    <button
+                                        onClick={() => handleDeleteChatAccount(chatMenuTarget)}
+                                        className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-red-400 hover:text-white hover:bg-red-500/20 transition-all text-sm group"
+                                    >
+                                        <Trash2 size={16} className="group-hover:text-red-500 transition-colors" />
+                                        <span>Delete for both</span>
+                                    </button>
+                                )}
+                            </motion.div>
+                        </>
                     )}
                 </AnimatePresence>
             </div>

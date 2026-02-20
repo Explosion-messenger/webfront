@@ -10,11 +10,12 @@ interface ChatListItemProps {
     userStatus?: string;
     typingUsers?: { username: string, timestamp: number }[];
     onClick: () => void;
+    onContextMenu: (e: React.MouseEvent) => void;
 }
 
 const getAvatarUrl = (path?: string) => path ? `/avatars/${path}` : null;
 
-const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive, userStatus, typingUsers, onClick }) => {
+const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive, userStatus, typingUsers, onClick, onContextMenu }) => {
     const getChatName = () => {
         if (chat.is_group && chat.name) return chat.name;
         if (chat.is_group) return chat.members.map(m => m.username).join(', ');
@@ -29,6 +30,7 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive
             whileHover={{ backgroundColor: 'rgba(30, 41, 59, 0.4)' }}
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
+            onContextMenu={onContextMenu}
             className={`p-4 flex items-center space-x-4 cursor-pointer transition-all duration-200 border-l-2 relative overflow-hidden ${isActive ? 'bg-brand-accent/10 border-brand-accent' : 'border-transparent'
                 }`}
         >
