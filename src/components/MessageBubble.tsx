@@ -11,7 +11,7 @@ interface MessageBubbleProps {
     isGroup: boolean;
     onDelete: (id: number) => void;
     onRead?: (id: number) => void;
-    onReadReceiptsClick?: (msg: Message) => void;
+    onReadReceiptsClick?: (msg: Message, pos: { x: number, y: number }) => void;
 }
 
 const getAvatarUrl = (path?: string) => path ? `/avatars/${path}` : null;
@@ -90,7 +90,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, isGroup
                 onContextMenu={(e) => {
                     if (isGroup) {
                         e.preventDefault();
-                        onReadReceiptsClick?.(msg);
+                        onReadReceiptsClick?.(msg, { x: e.clientX, y: e.clientY });
                     }
                 }}
                 className={`group relative max-w-[75%] p-4 rounded-2xl shadow-premium border transition-shadow ${isMe

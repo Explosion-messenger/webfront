@@ -10,7 +10,7 @@ import { type Chat, type Message, type User } from '../types';
 import ChatListItem from '../components/ChatListItem';
 import MessageBubble from '../components/MessageBubble';
 import GroupSettingsModal from '../components/GroupSettingsModal';
-import ReadReceiptsModal from '../components/ReadReceiptsModal';
+import ReadReceiptsPopup from '../components/ReadReceiptsPopup';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import { centerCrop, makeAspectCrop } from 'react-image-crop';
 
@@ -30,6 +30,7 @@ const ChatPage: React.FC = () => {
     const [newChatMode, setNewChatMode] = useState<'select' | 'private' | 'group'>('select');
     const [showGroupSettings, setShowGroupSettings] = useState(false);
     const [selectedMessageForReceipts, setSelectedMessageForReceipts] = useState<Message | null>(null);
+    const [receiptsPosition, setReceiptsPosition] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
     const [messageToDelete, setMessageToDelete] = useState<number | null>(null);
     const [typingUsers, setTypingUsers] = useState<Record<number, Record<number, { username: string, timestamp: number }>>>({});
     const typingTimeoutRef = useRef<Record<number, Record<number, ReturnType<typeof setTimeout>>>>({});
@@ -221,6 +222,15 @@ const ChatPage: React.FC = () => {
             if (lastSentStatusRef.current === newStatus) return;
             sendJson({ type: 'user_status_update', status: newStatus });
             lastSentStatusRef.current = newStatus;
+
+            // Immediately update local state for current user to fix top-left UI
+            if (user?.id) {
+                setUserStatuses(prev => {
+                    const newMap = new Map(prev);
+                    newMap.set(user.id, newStatus);
+                    return newMap;
+                });
+            }
         };
 
         const resetTimer = () => {
@@ -554,7 +564,10 @@ const ChatPage: React.FC = () => {
                                                 isGroup={activeChat.is_group}
                                                 onDelete={setMessageToDelete}
                                                 onRead={markMessageRead}
-                                                onReadReceiptsClick={setSelectedMessageForReceipts}
+                                                onReadReceiptsClick={(m, pos) => {
+                                                    setSelectedMessageForReceipts(m);
+                                                    setReceiptsPosition(pos);
+                                                }}
                                             />
                                         ))
                                     ) : (
@@ -786,9 +799,10 @@ const ChatPage: React.FC = () => {
 
                 <AnimatePresence>
                     {selectedMessageForReceipts && activeChat && (
-                        <ReadReceiptsModal
+                        <ReadReceiptsPopup
                             message={selectedMessageForReceipts}
                             chat={activeChat}
+                            position={receiptsPosition}
                             onClose={() => setSelectedMessageForReceipts(null)}
                         />
                     )}
