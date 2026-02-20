@@ -11,7 +11,7 @@ export function useWebSocket(
     onOnlineList: (ids: number[]) => void,
     onUserStatus: (userId: number, online: boolean) => void,
     onMessageRead: (data: { message_id: number, chat_id: number, user_id: number, read_at: string }) => void,
-    onTyping: (data: { chat_id: number, user_id: number, is_typing: boolean }) => void,
+    onTyping: (data: { chat_id: number, user_id: number, username: string, is_typing: boolean }) => void,
 ) {
     const ws = useRef<WebSocket | null>(null);
     const reconnectAttempt = useRef(0);

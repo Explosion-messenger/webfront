@@ -8,12 +8,13 @@ interface ChatListItemProps {
     currentUser: User | null;
     isActive: boolean;
     isOnline: boolean;
+    typingUsers?: { username: string, timestamp: number }[];
     onClick: () => void;
 }
 
 const getAvatarUrl = (path?: string) => path ? `/avatars/${path}` : null;
 
-const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive, isOnline, onClick }) => {
+const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive, isOnline, typingUsers, onClick }) => {
     const getChatName = () => {
         if (chat.is_group && chat.name) return chat.name;
         if (chat.is_group) return chat.members.map(m => m.username).join(', ');
@@ -71,12 +72,25 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive
                         </span>
                     )}
                 </div>
-                {chat.last_message && (
+                {typingUsers && typingUsers.length > 0 ? (
+                    <div className="flex items-center space-x-1.5 overflow-hidden">
+                        <p className="text-xs text-green-400 font-bold truncate">
+                            {chat.is_group
+                                ? `${typingUsers[0].username} is typing...`
+                                : 'typing...'}
+                        </p>
+                        <div className="flex space-x-0.5 shrink-0">
+                            <span className="w-0.5 h-0.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-0.5 h-0.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-0.5 h-0.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                    </div>
+                ) : chat.last_message ? (
                     <p className="text-xs text-brand-text-dim truncate font-normal leading-tight">
                         {chat.last_message.sender_id === currentUser?.id ? 'You: ' : ''}
                         {chat.last_message.text || 'Shared a file'}
                     </p>
-                )}
+                ) : null}
             </div>
 
             {isActive && (
