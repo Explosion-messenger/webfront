@@ -11,8 +11,9 @@ import { type Chat, type Message, type User } from '../types';
 import ChatListItem from '../components/ChatListItem';
 import MessageBubble from '../components/MessageBubble';
 import GroupSettingsModal from '../components/GroupSettingsModal';
-import ReadReceiptsPopup from '../components/ReadReceiptsPopup';
+import MessageContextMenu from '../components/MessageContextMenu';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import BigReaction from '../components/BigReaction';
 import { centerCrop, makeAspectCrop } from 'react-image-crop';
 
 const ChatPage: React.FC = () => {
@@ -44,6 +45,7 @@ const ChatPage: React.FC = () => {
     const [searchMatchIds, setSearchMatchIds] = useState<number[]>([]);
     const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
     const [highlightedMsgId, setHighlightedMsgId] = useState<number | null>(null);
+    const [activeBigReaction, setActiveBigReaction] = useState<{ emoji: string, timestamp: number } | null>(null);
 
     // Chat Actions Context Menu
     const [chatMenuPos, setChatMenuPos] = useState<{ x: number, y: number } | null>(null);
@@ -280,6 +282,64 @@ const ChatPage: React.FC = () => {
         }
     };
 
+    const handleToggleReaction = async (messageId: number, emoji: string) => {
+        try {
+            await api.post(`/messages/${messageId}/reactions`, { emoji });
+        } catch (err) {
+            console.error('Failed to toggle reaction:', err);
+        }
+    };
+
+    const handleMessageReaction = (data: { message_id: number, chat_id: number, user_id: number, emoji: string, action: 'added' | 'removed' }) => {
+        setMessages(prev => prev.map(m => {
+            if (m.id === data.message_id) {
+                if (data.action === 'added') {
+                    if (m.reactions.some(r => r.user_id === data.user_id && r.emoji === data.emoji)) return m;
+                    return {
+                        ...m,
+                        reactions: [...m.reactions, {
+                            id: Math.random(),
+                            user_id: data.user_id,
+                            emoji: data.emoji,
+                            created_at: new Date().toISOString()
+                        }]
+                    };
+                } else {
+                    return {
+                        ...m,
+                        reactions: m.reactions.filter(r => !(r.user_id === data.user_id && r.emoji === data.emoji))
+                    };
+                }
+            }
+            return m;
+        }));
+
+        if (data.action === 'added') {
+            setActiveBigReaction({ emoji: data.emoji, timestamp: Date.now() });
+        }
+
+        setChats(prev => prev.map(c => {
+            if (c.last_message?.id === data.message_id) {
+                const m = c.last_message;
+                let newReactions = m.reactions;
+                if (data.action === 'added') {
+                    if (!newReactions.some(r => r.user_id === data.user_id && r.emoji === data.emoji)) {
+                        newReactions = [...newReactions, {
+                            id: Math.random(),
+                            user_id: data.user_id,
+                            emoji: data.emoji,
+                            created_at: new Date().toISOString()
+                        }];
+                    }
+                } else {
+                    newReactions = newReactions.filter(r => !(r.user_id === data.user_id && r.emoji === data.emoji));
+                }
+                return { ...c, last_message: { ...m, reactions: newReactions } };
+            }
+            return c;
+        }));
+    };
+
     const handleLeaveChat = async (chat: Chat) => {
         if (!window.confirm(`Are you sure you want to leave ${chat.is_group ? 'this group' : 'this chat'}?`)) return;
         try {
@@ -369,7 +429,8 @@ const ChatPage: React.FC = () => {
         handleMessageRead,
         handleTyping,
         handleChatDeleted,
-        handleUserUpdated
+        handleUserUpdated,
+        handleMessageReaction
     );
 
     // Inactivity / Away Status Logic
@@ -835,6 +896,7 @@ const ChatPage: React.FC = () => {
                                                             setSelectedMessageForReceipts(m);
                                                             setReceiptsPosition(pos);
                                                         }}
+                                                        onReactionToggle={handleToggleReaction}
                                                         isSelectionMode={isSelectionMode}
                                                         isSelected={selectedMsgIds.has(msg.id)}
                                                         onSelect={() => toggleMsgSelection(msg.id)}
@@ -1072,11 +1134,13 @@ const ChatPage: React.FC = () => {
 
                 <AnimatePresence>
                     {selectedMessageForReceipts && activeChat && (
-                        <ReadReceiptsPopup
+                        <MessageContextMenu
                             message={selectedMessageForReceipts}
                             chat={activeChat}
                             position={receiptsPosition}
                             onClose={() => setSelectedMessageForReceipts(null)}
+                            onReactionToggle={(emoji) => handleToggleReaction(selectedMessageForReceipts.id, emoji)}
+                            currentUserId={user?.id}
                         />
                     )}
                 </AnimatePresence>
@@ -1139,6 +1203,16 @@ const ChatPage: React.FC = () => {
                                 )}
                             </motion.div>
                         </>
+                    )}
+                </AnimatePresence>
+                {/* Big Reaction Animation Area */}
+                <AnimatePresence>
+                    {activeBigReaction && (
+                        <BigReaction
+                            key={activeBigReaction.timestamp}
+                            emoji={activeBigReaction.emoji}
+                            onComplete={() => setActiveBigReaction(null)}
+                        />
                     )}
                 </AnimatePresence>
             </div>

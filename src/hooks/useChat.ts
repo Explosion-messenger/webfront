@@ -14,6 +14,7 @@ export function useWebSocket(
     onTyping: (data: { chat_id: number, user_id: number, username: string, is_typing: boolean }) => void,
     onChatDeleted: (chatId: number) => void,
     onUserUpdated: (data: { id: number, username: string, avatar_path: string | null }) => void,
+    onMessageReaction: (data: { message_id: number, chat_id: number, user_id: number, emoji: string, action: 'added' | 'removed' }) => void,
 ) {
     const ws = useRef<WebSocket | null>(null);
     const reconnectAttempt = useRef(0);
@@ -31,6 +32,7 @@ export function useWebSocket(
     const onTypingRef = useRef(onTyping);
     const onChatDeletedRef = useRef(onChatDeleted);
     const onUserUpdatedRef = useRef(onUserUpdated);
+    const onMessageReactionRef = useRef(onMessageReaction);
 
     // Keep refs up to date on every render
     useEffect(() => {
@@ -44,7 +46,8 @@ export function useWebSocket(
         onTypingRef.current = onTyping;
         onChatDeletedRef.current = onChatDeleted;
         onUserUpdatedRef.current = onUserUpdated;
-    }, [onNewMessage, onDeleteMessage, onNewChat, onChatUpdated, onOnlineList, onUserStatus, onMessageRead, onTyping, onChatDeleted, onUserUpdated]);
+        onMessageReactionRef.current = onMessageReaction;
+    }, [onNewMessage, onDeleteMessage, onNewChat, onChatUpdated, onOnlineList, onUserStatus, onMessageRead, onTyping, onChatDeleted, onUserUpdated, onMessageReaction]);
 
     useEffect(() => {
         isMounted.current = true;
@@ -84,6 +87,8 @@ export function useWebSocket(
                         onChatDeletedRef.current(data.data.chat_id);
                     } else if (data.type === 'user_updated') {
                         onUserUpdatedRef.current(data.data);
+                    } else if (data.type === 'message_reaction') {
+                        onMessageReactionRef.current(data.data);
                     }
                 } catch (err) {
                     console.error('WS parse error:', err);

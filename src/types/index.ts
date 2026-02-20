@@ -19,6 +19,13 @@ export interface MessageRead {
     read_at: string;
 }
 
+export interface MessageReaction {
+    id: number;
+    user_id: number;
+    emoji: string;
+    created_at: string;
+}
+
 export interface Message {
     id: number;
     chat_id: number;
@@ -28,6 +35,7 @@ export interface Message {
     file?: MessageFile;
     created_at: string;
     read_by: MessageRead[];
+    reactions: MessageReaction[];
 }
 
 export interface Chat {
