@@ -46,6 +46,8 @@ const ChatPage: React.FC = () => {
     const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
     const [highlightedMsgId, setHighlightedMsgId] = useState<number | null>(null);
     const [activeBigReaction, setActiveBigReaction] = useState<{ emoji: string, timestamp: number } | null>(null);
+    const [unreadBottomCount, setUnreadBottomCount] = useState(0);
+    const isAtBottomRef = useRef(true);
 
     // Chat Actions Context Menu
     const [chatMenuPos, setChatMenuPos] = useState<{ x: number, y: number } | null>(null);
@@ -79,6 +81,8 @@ const ChatPage: React.FC = () => {
         setInputText(''); // Clear input when switching chats
         setIsSelectionMode(false);
         setSelectedMsgIds(new Set());
+        setUnreadBottomCount(0);
+        isAtBottomRef.current = true;
         setIsMsgSearchOpen(false);
         setMsgSearchQuery('');
         setSearchMatchIds([]);
@@ -137,6 +141,32 @@ const ChatPage: React.FC = () => {
     }, [messages, messagesLoading, user?.id]);
 
     useEffect(() => {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+
+        const handleScroll = () => {
+            const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+            isAtBottomRef.current = isAtBottom;
+            if (isAtBottom) {
+                setUnreadBottomCount(0);
+                // Mark all current messages as read when hitting bottom
+                if (messages.some(m => m.sender_id !== user?.id && !m.read_by.some(r => r.user_id === user?.id))) {
+                    markChatRead();
+                }
+            }
+        };
+
+        container.addEventListener('scroll', handleScroll);
+        return () => container.removeEventListener('scroll', handleScroll);
+    }, [messages, user?.id]);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        setUnreadBottomCount(0);
+        markChatRead();
+    };
+
+    useEffect(() => {
         if (isInitialLoadRef.current || messagesLoading) return;
 
         const container = scrollContainerRef.current;
@@ -164,6 +194,9 @@ const ChatPage: React.FC = () => {
                 if (prev.find(m => m.id === msg.id)) return prev;
                 return [...prev, msg];
             });
+            if (!isAtBottomRef.current && msg.sender_id !== user?.id) {
+                setUnreadBottomCount(prev => prev + 1);
+            }
         }
         setChats(prev => {
             const chatExists = prev.find(c => c.id === msg.chat_id);
@@ -201,12 +234,20 @@ const ChatPage: React.FC = () => {
     };
 
     const handleChatUpdated = (data: any) => {
-        setChats(prev => prev.map(c => {
-            if (c.id === data.id) {
-                return { ...c, ...data };
+        setChats(prev => {
+            const exists = prev.find(c => c.id === data.id);
+            if (!exists) {
+                // If chat is missing (e.g. newly added), fetch it
+                fetchChats();
+                return prev;
             }
-            return c;
-        }));
+            return prev.map(c => {
+                if (c.id === data.id) {
+                    return { ...c, ...data };
+                }
+                return c;
+            });
+        });
         if (activeChatIdRef.current === data.id) {
             setActiveChat(prev => prev ? { ...prev, ...data } : null);
         }
@@ -377,6 +418,15 @@ const ChatPage: React.FC = () => {
             await api.post(`/messages/${messageId}/read`);
         } catch (err) {
             console.error('Failed to mark message read:', err);
+        }
+    };
+
+    const markChatRead = async () => {
+        if (!activeChat) return;
+        try {
+            await api.post(`/chats/${activeChat.id}/read`);
+        } catch (err) {
+            console.error('Failed to mark chat as read:', err);
         }
     };
 
@@ -915,6 +965,27 @@ const ChatPage: React.FC = () => {
                                 </AnimatePresence>
                                 <div ref={messagesEndRef} />
                             </div>
+
+                            {/* Scroll to bottom button */}
+                            <AnimatePresence>
+                                {unreadBottomCount > 0 && (
+                                    <motion.button
+                                        initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 20, scale: 0.8 }}
+                                        onClick={scrollToBottom}
+                                        className="absolute bottom-28 right-8 z-40 bg-brand-accent text-white p-3 rounded-full shadow-glow flex items-center space-x-2 group hover:scale-110 active:scale-95 transition-all"
+                                    >
+                                        <div className="relative">
+                                            <ChevronDown size={24} className="group-hover:translate-y-0.5 transition-transform" />
+                                            <span className="absolute -top-4 -right-4 bg-red-500 text-[10px] font-black w-6 h-6 rounded-full border-2 border-brand-bg flex items-center justify-center shadow-lg">
+                                                {unreadBottomCount > 99 ? '99+' : unreadBottomCount}
+                                            </span>
+                                        </div>
+                                        <span className="text-[10px] uppercase font-black tracking-widest pr-2 hidden group-hover:block">Scroll to latest</span>
+                                    </motion.button>
+                                )}
+                            </AnimatePresence>
 
                             <div className="p-6 border-t border-brand-border bg-brand-sidebar/50 shrink-0">
                                 <form onSubmit={sendMessage} className="flex items-center space-x-4">
