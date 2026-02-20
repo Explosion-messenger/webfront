@@ -11,6 +11,7 @@ import ChatListItem from '../components/ChatListItem';
 import MessageBubble from '../components/MessageBubble';
 import GroupSettingsModal from '../components/GroupSettingsModal';
 import ReadReceiptsModal from '../components/ReadReceiptsModal';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import { centerCrop, makeAspectCrop } from 'react-image-crop';
 
 const ChatPage: React.FC = () => {
@@ -29,6 +30,7 @@ const ChatPage: React.FC = () => {
     const [newChatMode, setNewChatMode] = useState<'select' | 'private' | 'group'>('select');
     const [showGroupSettings, setShowGroupSettings] = useState(false);
     const [selectedMessageForReceipts, setSelectedMessageForReceipts] = useState<Message | null>(null);
+    const [messageToDelete, setMessageToDelete] = useState<number | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const activeChatIdRef = useRef<number | null>(null);
@@ -380,7 +382,7 @@ const ChatPage: React.FC = () => {
                                                 msg={msg}
                                                 currentUser={user}
                                                 isGroup={activeChat.is_group}
-                                                onDelete={deleteMessage}
+                                                onDelete={setMessageToDelete}
                                                 onRead={markMessageRead}
                                                 onReadReceiptsClick={setSelectedMessageForReceipts}
                                             />
@@ -618,6 +620,18 @@ const ChatPage: React.FC = () => {
                             message={selectedMessageForReceipts}
                             chat={activeChat}
                             onClose={() => setSelectedMessageForReceipts(null)}
+                        />
+                    )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                    {messageToDelete && (
+                        <ConfirmDeleteModal
+                            onConfirm={() => {
+                                deleteMessage(messageToDelete);
+                                setMessageToDelete(null);
+                            }}
+                            onCancel={() => setMessageToDelete(null)}
                         />
                     )}
                 </AnimatePresence>
