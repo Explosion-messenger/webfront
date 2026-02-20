@@ -12,6 +12,7 @@ export function useWebSocket(
     onUserStatus: (userId: number, online: boolean) => void,
     onMessageRead: (data: { message_id: number, chat_id: number, user_id: number, read_at: string }) => void,
     onTyping: (data: { chat_id: number, user_id: number, username: string, is_typing: boolean }) => void,
+    onChatDeleted: (chatId: number) => void,
 ) {
     const ws = useRef<WebSocket | null>(null);
     const reconnectAttempt = useRef(0);
@@ -27,16 +28,20 @@ export function useWebSocket(
     const onUserStatusRef = useRef(onUserStatus);
     const onMessageReadRef = useRef(onMessageRead);
     const onTypingRef = useRef(onTyping);
+    const onChatDeletedRef = useRef(onChatDeleted);
 
     // Keep refs up to date on every render
-    useEffect(() => { onNewMessageRef.current = onNewMessage; }, [onNewMessage]);
-    useEffect(() => { onDeleteMessageRef.current = onDeleteMessage; }, [onDeleteMessage]);
-    useEffect(() => { onNewChatRef.current = onNewChat; }, [onNewChat]);
-    useEffect(() => { onChatUpdatedRef.current = onChatUpdated; }, [onChatUpdated]);
-    useEffect(() => { onOnlineListRef.current = onOnlineList; }, [onOnlineList]);
-    useEffect(() => { onUserStatusRef.current = onUserStatus; }, [onUserStatus]);
-    useEffect(() => { onMessageReadRef.current = onMessageRead; }, [onMessageRead]);
-    useEffect(() => { onTypingRef.current = onTyping; }, [onTyping]);
+    useEffect(() => {
+        onNewMessageRef.current = onNewMessage;
+        onDeleteMessageRef.current = onDeleteMessage;
+        onNewChatRef.current = onNewChat;
+        onChatUpdatedRef.current = onChatUpdated;
+        onOnlineListRef.current = onOnlineList;
+        onUserStatusRef.current = onUserStatus;
+        onMessageReadRef.current = onMessageRead;
+        onTypingRef.current = onTyping;
+        onChatDeletedRef.current = onChatDeleted;
+    }, [onNewMessage, onDeleteMessage, onNewChat, onChatUpdated, onOnlineList, onUserStatus, onMessageRead, onTyping, onChatDeleted]);
 
     useEffect(() => {
         isMounted.current = true;
@@ -72,6 +77,8 @@ export function useWebSocket(
                         onMessageReadRef.current(data.data);
                     } else if (data.type === 'typing') {
                         onTypingRef.current(data.data);
+                    } else if (data.type === 'chat_deleted') {
+                        onChatDeletedRef.current(data.data.chat_id);
                     }
                 } catch (err) {
                     console.error('WS parse error:', err);

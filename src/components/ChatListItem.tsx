@@ -82,10 +82,10 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive
                                 return `${typingUsers[0].username}, ${typingUsers[1].username} & ${typingUsers.length - 2} more are typing`;
                             })()}
                         </p>
-                        <div className="flex space-x-0.5 shrink-0">
-                            <span className="w-0.5 h-0.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                            <span className="w-0.5 h-0.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                            <span className="w-0.5 h-0.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <div className="flex space-x-1 mb-0.5 shrink-0">
+                            <span className="w-1 h-1 bg-green-400 rounded-full animate-pulse-dot" style={{ animationDelay: '0ms' }} />
+                            <span className="w-1 h-1 bg-green-400 rounded-full animate-pulse-dot" style={{ animationDelay: '200ms' }} />
+                            <span className="w-1 h-1 bg-green-400 rounded-full animate-pulse-dot" style={{ animationDelay: '400ms' }} />
                         </div>
                     </div>
                 ) : chat.last_message ? (

@@ -164,6 +164,14 @@ const ChatPage: React.FC = () => {
         });
     };
 
+    const handleChatDeleted = (chatId: number) => {
+        setChats(prev => prev.filter(c => c.id !== chatId));
+        if (activeChatIdRef.current === chatId) {
+            setActiveChat(null);
+            setShowGroupSettings(false);
+        }
+    };
+
     const handleTyping = (data: { chat_id: number, user_id: number, username: string, is_typing: boolean }) => {
         setTypingUsers(prev => {
             const chatTyping = { ...(prev[data.chat_id] || {}) };
@@ -191,7 +199,7 @@ const ChatPage: React.FC = () => {
         }
     };
 
-    const { sendJson } = useWebSocket(token, handleNewMessage, handleDeleteMessage, handleNewChat, handleChatUpdated, handleOnlineList, handleUserStatus, handleMessageRead, handleTyping);
+    const { sendJson } = useWebSocket(token, handleNewMessage, handleDeleteMessage, handleNewChat, handleChatUpdated, handleOnlineList, handleUserStatus, handleMessageRead, handleTyping, handleChatDeleted);
 
     const markMessageRead = async (messageId: number) => {
         try {
@@ -456,10 +464,10 @@ const ChatPage: React.FC = () => {
                                                     return (
                                                         <div className="flex items-center space-x-1.5 overflow-hidden">
                                                             <span className="text-[10px] font-black text-green-400 uppercase tracking-[0.2em]">{text}</span>
-                                                            <div className="flex space-x-0.5">
-                                                                <span className="w-0.5 h-0.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                                                <span className="w-0.5 h-0.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                                                <span className="w-0.5 h-0.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                                            <div className="flex space-x-1 mb-0.5">
+                                                                <span className="w-1 h-1 bg-green-400 rounded-full animate-pulse-dot" style={{ animationDelay: '0ms' }} />
+                                                                <span className="w-1 h-1 bg-green-400 rounded-full animate-pulse-dot" style={{ animationDelay: '200ms' }} />
+                                                                <span className="w-1 h-1 bg-green-400 rounded-full animate-pulse-dot" style={{ animationDelay: '400ms' }} />
                                                             </div>
                                                         </div>
                                                     );
