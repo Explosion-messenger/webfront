@@ -196,7 +196,7 @@ const ChatPage: React.FC = () => {
         }
     };
 
-    const { ws, sendJson } = useWebSocket(token, handleNewMessage, handleDeleteMessage, handleNewChat, handleChatUpdated, handleOnlineList, handleUserStatus, handleMessageRead, handleTyping);
+    const { sendJson } = useWebSocket(token, handleNewMessage, handleDeleteMessage, handleNewChat, handleChatUpdated, handleOnlineList, handleUserStatus, handleMessageRead, handleTyping);
 
     const markMessageRead = async (messageId: number) => {
         try {
@@ -545,7 +545,7 @@ const ChatPage: React.FC = () => {
                                 initial={{ scale: 0.95, y: 10 }}
                                 animate={{ scale: 1, y: 0 }}
                                 exit={{ scale: 0.95, y: 10 }}
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                 className="bg-brand-card w-full max-w-lg rounded-[2.5rem] border border-brand-border shadow-3xl overflow-hidden flex flex-col max-h-full"
                             >
                                 <div className="p-8 border-b border-brand-border flex justify-between items-center bg-brand-sidebar/50 shrink-0">
