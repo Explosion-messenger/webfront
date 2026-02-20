@@ -55,8 +55,6 @@ const ChatPage: React.FC = () => {
     const [chatMenuTarget, setChatMenuTarget] = useState<Chat | null>(null);
 
 
-    const [show2FASetup, setShow2FASetup] = useState(false);
-    const [show2FAProposal, setShow2FAProposal] = useState(false);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -78,14 +76,6 @@ const ChatPage: React.FC = () => {
 
     useEffect(() => {
         fetchChats();
-        // Check if 2FA should be proposed
-        if (user && !user.is_2fa_enabled) {
-            const lastProposal = localStorage.getItem(`2fa_proposal_${user.id}`);
-            const now = Date.now();
-            if (!lastProposal || now - parseInt(lastProposal) > 1000 * 60 * 60 * 24) { // Once a day
-                setShow2FAProposal(true);
-            }
-        }
     }, [user?.id]);
 
     useEffect(() => {
@@ -769,13 +759,6 @@ const ChatPage: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center space-x-1">
-                        <button
-                            onClick={() => setShow2FASetup(true)}
-                            className={`p-2 rounded-xl transition-all ${user?.is_2fa_enabled ? 'text-brand-accent bg-brand-accent/10' : 'text-brand-text-dim hover:text-white hover:bg-brand-bg'}`}
-                            title={user?.is_2fa_enabled ? "2FA Active" : "Enable 2FA"}
-                        >
-                            <Shield size={18} strokeWidth={user?.is_2fa_enabled ? 2.5 : 1.5} />
-                        </button>
                         <button onClick={logout} className="p-2 hover:bg-brand-bg rounded-xl transition-colors text-brand-text-dim hover:text-white" title="Logout">
                             <LogOut size={18} strokeWidth={1.5} />
                         </button>
@@ -783,46 +766,6 @@ const ChatPage: React.FC = () => {
                 </div>
 
                 <div className="p-4 shrink-0 space-y-3">
-                    <AnimatePresence>
-                        {show2FAProposal && (
-                            <motion.div
-                                initial={{ height: 0, opacity: 0, scale: 0.9 }}
-                                animate={{ height: 'auto', opacity: 1, scale: 1 }}
-                                exit={{ height: 0, opacity: 0, scale: 0.9 }}
-                                className="bg-brand-accent/10 border border-brand-accent/20 rounded-2xl p-4 relative overflow-hidden group mb-2"
-                            >
-                                <div className="flex items-start space-x-3">
-                                    <div className="p-2 bg-brand-accent/20 rounded-xl shrink-0">
-                                        <Shield size={16} className="text-brand-accent" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-[10px] font-black text-white uppercase tracking-widest mb-1">Secure Your Node</p>
-                                        <p className="text-[9px] font-bold text-brand-text-dim uppercase leading-relaxed mb-3">Enable 2FA synchronization to protect your identity.</p>
-                                        <div className="flex space-x-2">
-                                            <button
-                                                onClick={() => {
-                                                    setShow2FASetup(true);
-                                                    setShow2FAProposal(false);
-                                                }}
-                                                className="px-3 py-1.5 bg-brand-accent text-white text-[9px] font-black uppercase rounded-lg hover:scale-105 transition-transform"
-                                            >
-                                                Enable
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setShow2FAProposal(false);
-                                                    localStorage.setItem(`2fa_proposal_${user?.id}`, Date.now().toString());
-                                                }}
-                                                className="px-3 py-1.5 bg-white/5 text-brand-text-dim text-[9px] font-black uppercase rounded-lg hover:text-white transition-colors"
-                                            >
-                                                Later
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
                     <button onClick={() => setShowNewChat(true)} className="glow-button w-full border-none py-3 text-[10px] tracking-[0.2em] font-black uppercase">
                         New Connection
                     </button>
@@ -1336,15 +1279,6 @@ const ChatPage: React.FC = () => {
                     )}
                 </AnimatePresence>
 
-                {/* 2FA Setup Modal */}
-                <TwoFASetupModal
-                    isOpen={show2FASetup}
-                    onClose={() => setShow2FASetup(false)}
-                    onSuccess={() => {
-                        refreshUser();
-                        setShow2FAProposal(false);
-                    }}
-                />
 
                 {/* Big Reaction Animation Area */}
                 <AnimatePresence>

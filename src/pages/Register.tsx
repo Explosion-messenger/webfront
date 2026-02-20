@@ -117,7 +117,7 @@ const Register: React.FC = () => {
                                     disabled={loading}
                                 />
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-1">
                                 <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-brand-text-dim ml-1">Access Password</label>
                                 <input
                                     type="password"
@@ -125,8 +125,10 @@ const Register: React.FC = () => {
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-white transition-all shadow-inner"
                                     required
+                                    minLength={6}
                                     disabled={loading}
                                 />
+                                <p className="text-[9px] text-brand-text-dim/60 ml-1">Complexity requirement: Minimum 6 characters</p>
                             </div>
                             <button
                                 type="submit"
