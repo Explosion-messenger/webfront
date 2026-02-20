@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogOut, Send, Paperclip, Plus, Search, User as UserIcon, X, Camera, Check, Moon } from 'lucide-react';
+import { LogOut, Send, Paperclip, Plus, Search, User as UserIcon, X, Camera, Check, Moon, Trash2, CheckSquare } from 'lucide-react';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,6 +35,12 @@ const ChatPage: React.FC = () => {
     const [typingUsers, setTypingUsers] = useState<Record<number, Record<number, { username: string, timestamp: number }>>>({});
     const typingTimeoutRef = useRef<Record<number, Record<number, ReturnType<typeof setTimeout>>>>({});
 
+    // Selection & Search
+    const [selectedMsgIds, setSelectedMsgIds] = useState<Set<number>>(new Set());
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [isMsgSearchOpen, setIsMsgSearchOpen] = useState(false);
+    const [msgSearchQuery, setMsgSearchQuery] = useState('');
+
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const activeChatIdRef = useRef<number | null>(null);
@@ -58,6 +64,10 @@ const ChatPage: React.FC = () => {
     useEffect(() => {
         activeChatIdRef.current = activeChat?.id || null;
         setInputText(''); // Clear input when switching chats
+        setIsSelectionMode(false);
+        setSelectedMsgIds(new Set());
+        setIsMsgSearchOpen(false);
+        setMsgSearchQuery('');
     }, [activeChat?.id]);
 
     useEffect(() => {
@@ -200,8 +210,6 @@ const ChatPage: React.FC = () => {
         }
     };
 
-    const { sendJson } = useWebSocket(token, handleNewMessage, handleDeleteMessage, handleNewChat, handleChatUpdated, handleOnlineList, handleUserStatus, handleMessageRead, handleTyping, handleChatDeleted);
-
     const markMessageRead = async (messageId: number) => {
         try {
             await api.post(`/messages/${messageId}/read`);
@@ -209,6 +217,46 @@ const ChatPage: React.FC = () => {
             console.error('Failed to mark message read:', err);
         }
     };
+
+    const deleteMessage = async (messageId: number) => {
+        try {
+            await api.delete(`/messages/${messageId}`);
+            setMessages(prev => prev.filter(m => m.id !== messageId));
+        } catch (err) {
+            console.error('Failed to delete message:', err);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedMsgIds.size === 0) return;
+        if (!window.confirm(`Are you sure you want to delete ${selectedMsgIds.size} messages?`)) return;
+
+        try {
+            const ids = Array.from(selectedMsgIds);
+            await api.delete('/messages/bulk', { data: ids });
+            setMessages(prev => prev.filter(m => !selectedMsgIds.has(m.id)));
+            setSelectedMsgIds(new Set());
+            setIsSelectionMode(false);
+        } catch (err) {
+            console.error('Failed bulk delete:', err);
+        }
+    };
+
+    const toggleMsgSelection = (id: number) => {
+        setSelectedMsgIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const toggleSelectionMode = () => {
+        setIsSelectionMode(!isSelectionMode);
+        setSelectedMsgIds(new Set());
+    };
+
+    const { sendJson } = useWebSocket(token, handleNewMessage, handleDeleteMessage, handleNewChat, handleChatUpdated, handleOnlineList, handleUserStatus, handleMessageRead, handleTyping, handleChatDeleted);
 
     // Inactivity / Away Status Logic
     const lastSentStatusRef = useRef<'online' | 'away'>('online');
@@ -328,9 +376,7 @@ const ChatPage: React.FC = () => {
         } catch (err) { console.error(err); }
     };
 
-    const deleteMessage = async (messageId: number) => {
-        try { await api.delete(`/messages/${messageId}`); } catch (err) { console.error(err); }
-    };
+
 
     const searchUsers = async (q: string) => {
         setSearchQuery(q);
@@ -370,7 +416,10 @@ const ChatPage: React.FC = () => {
     const toggleUserSelection = (userId: number) => {
         setSelectedUserIds(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
     };
-
+    const filteredMessages = messages.filter(m => {
+        if (!msgSearchQuery) return true;
+        return m.text?.toLowerCase().includes(msgSearchQuery.toLowerCase());
+    });
     const getChatName = (chat: Chat) => {
         if (chat.is_group && chat.name) return chat.name;
         if (chat.is_group) return chat.members.map(m => m.username).join(', ');
@@ -546,17 +595,53 @@ const ChatPage: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex space-x-2 shrink-0">
-                                    <button className="p-2 text-brand-text-dim hover:text-brand-accent transition-colors">
+                                <div className="flex items-center space-x-2 shrink-0">
+                                    <div className={`flex items-center bg-slate-900/50 rounded-xl transition-all ${isMsgSearchOpen ? 'w-48 px-3' : 'w-0 overflow-hidden'}`}>
+                                        <input
+                                            type="text"
+                                            value={msgSearchQuery}
+                                            onChange={(e) => setMsgSearchQuery(e.target.value)}
+                                            placeholder="Search messages..."
+                                            className="bg-transparent border-none outline-none text-xs text-white w-full py-2"
+                                        />
+                                        {msgSearchQuery && (
+                                            <button onClick={() => setMsgSearchQuery('')} className="text-brand-text-dim hover:text-white">
+                                                <X size={12} />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setIsMsgSearchOpen(!isMsgSearchOpen);
+                                            if (isMsgSearchOpen) setMsgSearchQuery('');
+                                        }}
+                                        className={`p-2 rounded-xl transition-colors ${isMsgSearchOpen ? 'bg-brand-accent text-white' : 'text-brand-text-dim hover:text-brand-accent'}`}
+                                    >
                                         <Search size={20} />
                                     </button>
+                                    <button
+                                        onClick={toggleSelectionMode}
+                                        className={`p-2 rounded-xl transition-colors ${isSelectionMode ? 'bg-brand-accent text-white' : 'text-brand-text-dim hover:text-brand-accent'}`}
+                                        title="Select Messages"
+                                    >
+                                        <CheckSquare size={20} />
+                                    </button>
+                                    {isSelectionMode && selectedMsgIds.size > 0 && (
+                                        <button
+                                            onClick={handleBulkDelete}
+                                            className="p-2 bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all shadow-glow-yellow"
+                                            title={`Delete ${selectedMsgIds.size} messages`}
+                                        >
+                                            <Trash2 size={20} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
                                 <AnimatePresence mode="popLayout">
                                     {!messagesLoading ? (
-                                        messages.map((msg) => (
+                                        filteredMessages.map((msg) => (
                                             <MessageBubble
                                                 key={msg.id}
                                                 msg={msg}
@@ -568,6 +653,9 @@ const ChatPage: React.FC = () => {
                                                     setSelectedMessageForReceipts(m);
                                                     setReceiptsPosition(pos);
                                                 }}
+                                                isSelectionMode={isSelectionMode}
+                                                isSelected={selectedMsgIds.has(msg.id)}
+                                                onSelect={() => toggleMsgSelection(msg.id)}
                                             />
                                         ))
                                     ) : (

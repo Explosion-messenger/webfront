@@ -12,11 +12,14 @@ interface MessageBubbleProps {
     onDelete: (id: number) => void;
     onRead?: (id: number) => void;
     onReadReceiptsClick?: (msg: Message, pos: { x: number, y: number }) => void;
+    isSelectionMode?: boolean;
+    isSelected?: boolean;
+    onSelect?: (id: number) => void;
 }
 
 const getAvatarUrl = (path?: string) => path ? `/avatars/${path}` : null;
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, isGroup, onDelete, onRead, onReadReceiptsClick }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, isGroup, onDelete, onRead, onReadReceiptsClick, isSelectionMode, isSelected, onSelect }) => {
     const { token } = useAuth();
     const isMe = msg.sender_id === currentUser?.id;
     const downloadUrl = (path: string) => `/files/download/${path}${token ? `?token=${token}` : ''}`;
@@ -67,8 +70,16 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, isGroup
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2 }}
-            className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end space-x-2 ${isMe ? 'space-x-reverse' : ''}`}
+            className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end space-x-2 ${isMe ? 'space-x-reverse' : ''} ${isSelectionMode ? 'cursor-pointer' : ''}`}
+            onClick={() => isSelectionMode && isMe && onSelect?.(msg.id)}
         >
+            {isSelectionMode && isMe && (
+                <div className="flex-shrink-0 self-center px-2">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-brand-accent border-brand-accent shadow-glow' : 'border-brand-border bg-brand-card/20'}`}>
+                        {isSelected && <Check size={12} strokeWidth={4} className="text-white" />}
+                    </div>
+                </div>
+            )}
             {/* Avatar */}
             <div className="flex-shrink-0 mb-1">
                 {msg.sender.avatar_path ? (
@@ -94,7 +105,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, isGroup
                     }
                 }}
                 className={`group relative max-w-[75%] p-4 rounded-2xl shadow-premium border transition-shadow ${isMe
-                    ? 'bg-brand-accent border-brand-accent/20 text-white rounded-br-none'
+                    ? `bg-brand-accent border-brand-accent/20 text-white rounded-br-none ${isSelected ? 'ring-2 ring-white/50 ring-offset-2 ring-offset-brand-bg shadow-glow' : ''}`
                     : 'bg-brand-card border-brand-border text-brand-text rounded-bl-none'
                     }`}>
                 {!isMe && (
