@@ -210,32 +210,39 @@ const ChatPage: React.FC = () => {
     };
 
     // Inactivity / Away Status Logic
+    const lastSentStatusRef = useRef<'online' | 'away'>('online');
+
     useEffect(() => {
-        if (!token) return;
+        if (!token || !user) return;
 
         let inactivityTimer: ReturnType<typeof setTimeout>;
+
+        const updateStatus = (newStatus: 'online' | 'away') => {
+            if (lastSentStatusRef.current === newStatus) return;
+            sendJson({ type: 'user_status_update', status: newStatus });
+            lastSentStatusRef.current = newStatus;
+        };
+
         const resetTimer = () => {
             clearTimeout(inactivityTimer);
-
-            // If we were away, switch back to online
-            if (userStatuses.get(user?.id || 0) === 'away') {
-                sendJson({ type: 'user_status_update', status: 'online' });
-            }
+            updateStatus('online');
 
             inactivityTimer = setTimeout(() => {
-                sendJson({ type: 'user_status_update', status: 'away' });
+                updateStatus('away');
             }, 60000); // 1 minute
         };
 
         const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
         events.forEach(name => document.addEventListener(name, resetTimer));
+
+        // Initial setup
         resetTimer();
 
         return () => {
             events.forEach(name => document.removeEventListener(name, resetTimer));
             clearTimeout(inactivityTimer);
         };
-    }, [token, user?.id, userStatuses.get(user?.id || 0)]);
+    }, [token, user?.id]);
 
     // Send typing status
     const lastSentTypingTimeRef = useRef<Record<number, number>>({});
@@ -394,6 +401,13 @@ const ChatPage: React.FC = () => {
                                     {user?.username?.[0].toUpperCase()}
                                 </div>
                             )}
+                            {userStatuses.get(user?.id || 0) === 'away' ? (
+                                <div className="absolute -bottom-1 -right-1 bg-brand-sidebar rounded-full p-0.5">
+                                    <Moon size={12} fill="currentColor" className="text-brand-away shadow-glow-yellow" />
+                                </div>
+                            ) : (
+                                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-brand-sidebar rounded-full shadow-glow-green" />
+                            )}
                             <div className="absolute inset-0 bg-brand-bg/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all rounded-2xl scale-90 group-hover:scale-100 space-x-2">
                                 <label className="cursor-pointer p-1.5 hover:bg-brand-accent rounded-lg transition-colors">
                                     <Camera size={14} className="text-white" />
@@ -408,7 +422,11 @@ const ChatPage: React.FC = () => {
                         </div>
                         <div className="flex flex-col">
                             <span className="font-semibold text-sm tracking-tight">{user?.username}</span>
-                            <span className="text-[10px] text-green-500 font-bold uppercase tracking-widest">Active</span>
+                            {userStatuses.get(user?.id || 0) === 'away' ? (
+                                <span className="text-[10px] text-brand-away font-bold uppercase tracking-widest animate-pulse">Away</span>
+                            ) : (
+                                <span className="text-[10px] text-green-500 font-bold uppercase tracking-widest">Active</span>
+                            )}
                         </div>
                     </div>
                     <div className="flex items-center space-x-1">
