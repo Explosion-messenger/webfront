@@ -179,8 +179,11 @@ const ChatPage: React.FC = () => {
             setActiveChat(newChat);
             setShowNewChat(false);
             setGroupName('');
+            setSelectedUserIds([]);
             setNewChatMode('select');
-        } catch (err) { console.error(err); }
+        } catch (err) {
+            console.error('Failed to create chat:', err);
+        }
     };
 
     const toggleUserSelection = (userId: number) => {
@@ -396,7 +399,7 @@ const ChatPage: React.FC = () => {
                                 <div className="p-8 border-b border-brand-border flex justify-between items-center bg-brand-sidebar/50 shrink-0">
                                     <div className="flex items-center space-x-4">
                                         {newChatMode !== 'select' && (
-                                            <button onClick={() => setNewChatMode('select')} className="text-brand-text-dim hover:text-white transition-colors">
+                                            <button onClick={() => { setNewChatMode('select'); setSelectedUserIds([]); }} className="text-brand-text-dim hover:text-white transition-colors">
                                                 <LogOut size={20} className="rotate-180" />
                                             </button>
                                         )}
@@ -404,7 +407,7 @@ const ChatPage: React.FC = () => {
                                             {newChatMode === 'select' ? 'Core Functions' : newChatMode === 'private' ? 'Direct Interface' : 'Group Initialization'}
                                         </h3>
                                     </div>
-                                    <button onClick={() => { setShowNewChat(false); setNewChatMode('select'); }} className="text-brand-text-dim hover:text-white transition-colors">
+                                    <button onClick={() => { setShowNewChat(false); setNewChatMode('select'); setSelectedUserIds([]); }} className="text-brand-text-dim hover:text-white transition-colors">
                                         <X size={24} strokeWidth={2} />
                                     </button>
                                 </div>
@@ -412,7 +415,7 @@ const ChatPage: React.FC = () => {
                                 <div className="p-10 bg-brand-bg/20 overflow-y-auto custom-scroll">
                                     {newChatMode === 'select' ? (
                                         <div className="grid grid-cols-1 gap-6">
-                                            <button onClick={() => { setNewChatMode('private'); setUsers([]); setSearchQuery(''); }} className="group p-8 premium-card hover:border-brand-accent transition-colors duration-300 text-left">
+                                            <button onClick={() => { setNewChatMode('private'); setUsers([]); setSearchQuery(''); setSelectedUserIds([]); }} className="group p-8 premium-card hover:border-brand-accent transition-colors duration-300 text-left">
                                                 <UserIcon size={32} className="text-brand-accent mb-4 group-hover:scale-110 transition-transform" />
                                                 <h4 className="text-lg font-bold text-white mb-1 uppercase tracking-wider">Secure DM</h4>
                                                 <p className="text-xs text-brand-text-dim uppercase tracking-widest font-bold opacity-60">End-to-end encrypted link</p>
