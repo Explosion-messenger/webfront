@@ -30,8 +30,9 @@ The application will be available at `http://localhost`.
    ```
 
 ## Configuration
-The frontend uses Nginx (in Docker) to proxy requests to the backend. 
+The frontend uses Caddy to serve static files and proxy requests to the backend. 
 - API calls are proxied from `/api/` to `http://backend:8000/`.
 - WebSocket connections are proxied from `/ws` to `http://backend:8000/ws`.
 
-Modify `nginx/conf.d/default.conf` if your backend is hosted at a different address.
+Modify the `Caddyfile` if your backend is hosted at a different address or if you need to add more routes.
+
