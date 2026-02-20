@@ -87,6 +87,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, isGroup
             {/* Bubble */}
             <div
                 ref={bubbleRef}
+                onContextMenu={(e) => {
+                    if (isGroup) {
+                        e.preventDefault();
+                        onReadReceiptsClick?.(msg);
+                    }
+                }}
                 className={`group relative max-w-[75%] p-4 rounded-2xl shadow-premium border transition-shadow ${isMe
                     ? 'bg-brand-accent border-brand-accent/20 text-white rounded-br-none'
                     : 'bg-brand-card border-brand-border text-brand-text rounded-bl-none'
@@ -132,8 +138,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, isGroup
                     {isMe && (
                         <div className="flex items-center space-x-2">
                             <div
-                                onClick={() => isGroup && onReadReceiptsClick?.(msg)}
-                                className={isGroup && msg.read_by.length > 0 ? 'cursor-pointer hover:scale-110 transition-transform' : ''}
+                                className={isGroup && (msg.read_by?.length || 0) > 0 ? 'transition-transform' : ''}
                             >
                                 {renderTicks()}
                             </div>

@@ -55,6 +55,13 @@ const ChatPage: React.FC = () => {
     }, [activeChat?.id]);
 
     useEffect(() => {
+        // Disable browser context menu
+        const handleContextMenu = (e: MouseEvent) => e.preventDefault();
+        window.addEventListener('contextmenu', handleContextMenu);
+        return () => window.removeEventListener('contextmenu', handleContextMenu);
+    }, []);
+
+    useEffect(() => {
         // Immediate scroll to bottom without delay to prevent "jumping"
         messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
     }, [messages]);
