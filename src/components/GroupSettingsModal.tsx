@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Search, User as UserIcon, Plus, Trash2, Camera, LogOut, Check } from 'lucide-react';
+import { X, Search, User as UserIcon, Plus, Trash2, Camera, LogOut, Check, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -13,10 +13,10 @@ interface GroupSettingsModalProps {
     onUpdate: (updatedChat: Chat) => void;
     onDelete: (chatId: number) => void;
     currentUser: User | null;
-    onlineUsers: Set<number>;
+    userStatuses: Map<number, string>;
 }
 
-const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, onUpdate, onDelete, currentUser, onlineUsers }) => {
+const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, onUpdate, onDelete, currentUser, userStatuses }) => {
     const [name, setName] = useState(chat.name || '');
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<User[]>([]);
@@ -207,8 +207,13 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                                                         <UserIcon size={14} className="text-brand-text-dim" />
                                                     </div>
                                                 )}
-                                                {onlineUsers.has(member.id) && (
-                                                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-brand-card rounded-full" />
+                                                {userStatuses.get(member.id) === 'online' && (
+                                                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-brand-card rounded-full shadow-glow-green" />
+                                                )}
+                                                {userStatuses.get(member.id) === 'away' && (
+                                                    <div className="absolute -bottom-1 -right-1 bg-brand-card rounded-full p-0.5">
+                                                        <Moon size={10} fill="currentColor" className="text-brand-away shadow-glow-yellow" />
+                                                    </div>
                                                 )}
                                             </div>
                                             <span className="text-sm font-bold text-white uppercase tracking-wider">{member.username}</span>

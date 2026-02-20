@@ -8,8 +8,8 @@ export function useWebSocket(
     onDeleteMessage: (messageId: number, chatId: number) => void,
     onNewChat: (chat: Chat) => void,
     onChatUpdated: (data: any) => void,
-    onOnlineList: (ids: number[]) => void,
-    onUserStatus: (userId: number, online: boolean) => void,
+    onOnlineList: (data: Record<number, string>) => void,
+    onUserStatus: (userId: number, status: string) => void,
     onMessageRead: (data: { message_id: number, chat_id: number, user_id: number, read_at: string }) => void,
     onTyping: (data: { chat_id: number, user_id: number, username: string, is_typing: boolean }) => void,
     onChatDeleted: (chatId: number) => void,
@@ -72,7 +72,7 @@ export function useWebSocket(
                     } else if (data.type === 'online_list') {
                         onOnlineListRef.current(data.data);
                     } else if (data.type === 'user_status') {
-                        onUserStatusRef.current(data.data.user_id, data.data.online);
+                        onUserStatusRef.current(data.data.user_id, data.data.status);
                     } else if (data.type === 'message_read') {
                         onMessageReadRef.current(data.data);
                     } else if (data.type === 'typing') {

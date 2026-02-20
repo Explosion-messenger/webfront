@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogOut, Send, Paperclip, Plus, Search, User as UserIcon, X, Camera, Check } from 'lucide-react';
+import { LogOut, Send, Paperclip, Plus, Search, User as UserIcon, X, Camera, Check, Moon } from 'lucide-react';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,7 +24,7 @@ const ChatPage: React.FC = () => {
     const [showNewChat, setShowNewChat] = useState(false);
     const [users, setUsers] = useState<User[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [onlineUsers, setOnlineUsers] = useState<Set<number>>(new Set());
+    const [userStatuses, setUserStatuses] = useState<Map<number, string>>(new Map());
     const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
     const [groupName, setGroupName] = useState('');
     const [newChatMode, setNewChatMode] = useState<'select' | 'private' | 'group'>('select');
@@ -143,7 +143,7 @@ const ChatPage: React.FC = () => {
         }
     };
 
-    const handleOnlineList = (ids: number[]) => setOnlineUsers(new Set(ids));
+    const handleOnlineList = (data: Record<number, string>) => setUserStatuses(new Map(Object.entries(data).map(([id, status]) => [Number(id), status])));
 
     const handleMessageRead = (data: { message_id: number, chat_id: number, user_id: number, read_at: string }) => {
         setMessages(prev => prev.map(m => {
@@ -155,12 +155,12 @@ const ChatPage: React.FC = () => {
         }));
     };
 
-    const handleUserStatus = (userId: number, online: boolean) => {
-        setOnlineUsers(prev => {
-            const newSet = new Set(prev);
-            if (online) newSet.add(userId);
-            else newSet.delete(userId);
-            return newSet;
+    const handleUserStatus = (userId: number, status: string) => {
+        setUserStatuses(prev => {
+            const newMap = new Map(prev);
+            if (status === 'offline') newMap.delete(userId);
+            else newMap.set(userId, status);
+            return newMap;
         });
     };
 
@@ -208,6 +208,34 @@ const ChatPage: React.FC = () => {
             console.error('Failed to mark message read:', err);
         }
     };
+
+    // Inactivity / Away Status Logic
+    useEffect(() => {
+        if (!token) return;
+
+        let inactivityTimer: ReturnType<typeof setTimeout>;
+        const resetTimer = () => {
+            clearTimeout(inactivityTimer);
+
+            // If we were away, switch back to online
+            if (userStatuses.get(user?.id || 0) === 'away') {
+                sendJson({ type: 'user_status_update', status: 'online' });
+            }
+
+            inactivityTimer = setTimeout(() => {
+                sendJson({ type: 'user_status_update', status: 'away' });
+            }, 60000); // 1 minute
+        };
+
+        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+        events.forEach(name => document.addEventListener(name, resetTimer));
+        resetTimer();
+
+        return () => {
+            events.forEach(name => document.removeEventListener(name, resetTimer));
+            clearTimeout(inactivityTimer);
+        };
+    }, [token, user?.id, userStatuses.get(user?.id || 0)]);
 
     // Send typing status
     const lastSentTypingTimeRef = useRef<Record<number, number>>({});
@@ -333,10 +361,10 @@ const ChatPage: React.FC = () => {
         return otherMember?.username || 'Unknown';
     };
 
-    const isUserOnline = (chat: Chat) => {
-        if (chat.is_group) return false;
+    const getUserStatus = (chat: Chat): string | undefined => {
+        if (chat.is_group) return undefined;
         const otherMember = chat.members.find(m => m.id !== user?.id);
-        return otherMember ? onlineUsers.has(otherMember.id) : false;
+        return otherMember ? userStatuses.get(otherMember.id) || 'offline' : 'offline';
     };
 
     const getAvatarUrl = (path?: string) => path ? `/avatars/${path}` : null;
@@ -403,7 +431,7 @@ const ChatPage: React.FC = () => {
                             chat={chat}
                             currentUser={user}
                             isActive={activeChat?.id === chat.id}
-                            isOnline={isUserOnline(chat)}
+                            userStatus={getUserStatus(chat)}
                             typingUsers={Object.values(typingUsers[chat.id] || {})}
                             onClick={() => setActiveChat(chat)}
                         />
@@ -439,8 +467,17 @@ const ChatPage: React.FC = () => {
                                                 )}
                                             </div>
                                         )}
-                                        {!activeChat.is_group && isUserOnline(activeChat) && (
-                                            <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-brand-sidebar rounded-full shadow-glow-green" />
+                                        {!activeChat.is_group && (
+                                            (() => {
+                                                const status = getUserStatus(activeChat);
+                                                if (status === 'online') return <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-brand-sidebar rounded-full shadow-glow-green" />;
+                                                if (status === 'away') return (
+                                                    <div className="absolute -bottom-2 -right-2 bg-brand-sidebar rounded-full p-0.5 border-none">
+                                                        <Moon size={14} fill="currentColor" className="text-brand-away shadow-glow-yellow" />
+                                                    </div>
+                                                );
+                                                return null;
+                                            })()
                                         )}
                                     </div>
                                     <div className="min-w-0">
@@ -473,8 +510,8 @@ const ChatPage: React.FC = () => {
                                                     );
                                                 }
                                                 return (
-                                                    <p className="text-[10px] font-bold text-brand-text-dim uppercase tracking-[0.15em] truncate">
-                                                        {activeChat.is_group ? `${activeChat.members.length} Members` : isUserOnline(activeChat) ? 'Online' : 'Offline'}
+                                                    <p className={`text-[10px] font-bold uppercase tracking-[0.15em] truncate ${getUserStatus(activeChat) === 'away' ? 'text-brand-away' : 'text-brand-text-dim'}`}>
+                                                        {activeChat.is_group ? `${activeChat.members.length} Members` : getUserStatus(activeChat) === 'online' ? 'Online' : getUserStatus(activeChat) === 'away' ? 'Away' : 'Offline'}
                                                     </p>
                                                 );
                                             })()}
@@ -714,7 +751,7 @@ const ChatPage: React.FC = () => {
                         <GroupSettingsModal
                             chat={activeChat}
                             currentUser={user}
-                            onlineUsers={onlineUsers}
+                            userStatuses={userStatuses}
                             onClose={() => setShowGroupSettings(false)}
                             onUpdate={(updatedChat) => {
                                 setChats(prev => prev.map(c => c.id === updatedChat.id ? updatedChat : c));

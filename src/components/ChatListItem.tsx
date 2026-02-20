@@ -1,5 +1,5 @@
 import React from 'react';
-import { User as UserIcon } from 'lucide-react';
+import { User as UserIcon, Moon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { type Chat, type User } from '../types';
 
@@ -7,14 +7,14 @@ interface ChatListItemProps {
     chat: Chat;
     currentUser: User | null;
     isActive: boolean;
-    isOnline: boolean;
+    userStatus?: string;
     typingUsers?: { username: string, timestamp: number }[];
     onClick: () => void;
 }
 
 const getAvatarUrl = (path?: string) => path ? `/avatars/${path}` : null;
 
-const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive, isOnline, typingUsers, onClick }) => {
+const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive, userStatus, typingUsers, onClick }) => {
     const getChatName = () => {
         if (chat.is_group && chat.name) return chat.name;
         if (chat.is_group) return chat.members.map(m => m.username).join(', ');
@@ -54,8 +54,13 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive
                                 <UserIcon size={24} strokeWidth={1.5} className="text-brand-text-dim" />
                             </div>
                         )}
-                        {isOnline && (
+                        {userStatus === 'online' && (
                             <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-brand-sidebar rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                        )}
+                        {userStatus === 'away' && (
+                            <div className="absolute -bottom-1.5 -right-1.5 bg-brand-sidebar rounded-full p-0.5 border-none">
+                                <Moon size={12} fill="currentColor" className="text-brand-away shadow-glow-yellow" />
+                            </div>
                         )}
                     </>
                 )}
