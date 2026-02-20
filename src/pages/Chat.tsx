@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogOut, Send, Paperclip, Plus, Search, User as UserIcon, X, Camera, Check, Moon, Trash2, CheckSquare } from 'lucide-react';
+import { LogOut, Send, Paperclip, Plus, Search, User as UserIcon, X, Camera, Check, Moon, Trash2, CheckSquare, ChevronUp, ChevronDown } from 'lucide-react';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,11 +35,14 @@ const ChatPage: React.FC = () => {
     const [typingUsers, setTypingUsers] = useState<Record<number, Record<number, { username: string, timestamp: number }>>>({});
     const typingTimeoutRef = useRef<Record<number, Record<number, ReturnType<typeof setTimeout>>>>({});
 
-    // Selection & Search
+    // Message Selection & Search Navigation
     const [selectedMsgIds, setSelectedMsgIds] = useState<Set<number>>(new Set());
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [isMsgSearchOpen, setIsMsgSearchOpen] = useState(false);
     const [msgSearchQuery, setMsgSearchQuery] = useState('');
+    const [searchMatchIds, setSearchMatchIds] = useState<number[]>([]);
+    const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
+    const [highlightedMsgId, setHighlightedMsgId] = useState<number | null>(null);
 
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -68,6 +71,9 @@ const ChatPage: React.FC = () => {
         setSelectedMsgIds(new Set());
         setIsMsgSearchOpen(false);
         setMsgSearchQuery('');
+        setSearchMatchIds([]);
+        setCurrentMatchIndex(-1);
+        setHighlightedMsgId(null);
     }, [activeChat?.id]);
 
     useEffect(() => {
@@ -233,7 +239,7 @@ const ChatPage: React.FC = () => {
 
         try {
             const ids = Array.from(selectedMsgIds);
-            await api.delete('/messages/bulk', { data: ids });
+            await api.delete('/messages/bulk', { data: { message_ids: ids } });
             setMessages(prev => prev.filter(m => !selectedMsgIds.has(m.id)));
             setSelectedMsgIds(new Set());
             setIsSelectionMode(false);
@@ -416,10 +422,53 @@ const ChatPage: React.FC = () => {
     const toggleUserSelection = (userId: number) => {
         setSelectedUserIds(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
     };
-    const filteredMessages = messages.filter(m => {
-        if (!msgSearchQuery) return true;
-        return m.text?.toLowerCase().includes(msgSearchQuery.toLowerCase());
-    });
+
+    // Message Search Logic
+    useEffect(() => {
+        if (!msgSearchQuery.trim() || !messages.length) {
+            setSearchMatchIds([]);
+            setCurrentMatchIndex(-1);
+            return;
+        }
+
+        const matches = messages
+            .filter(m => m.text?.toLowerCase().includes(msgSearchQuery.toLowerCase()))
+            .map(m => m.id);
+
+        setSearchMatchIds(matches);
+        if (matches.length > 0) {
+            setCurrentMatchIndex(matches.length - 1); // Start from the newest match
+            scrollToMatch(matches[matches.length - 1]);
+        } else {
+            setCurrentMatchIndex(-1);
+        }
+    }, [msgSearchQuery, messages]);
+
+    const scrollToMatch = (msgId: number) => {
+        setTimeout(() => {
+            const el = document.getElementById(`msg-${msgId}`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setHighlightedMsgId(msgId);
+                setTimeout(() => setHighlightedMsgId(null), 2000);
+            }
+        }, 100);
+    };
+
+    const nextMatch = () => {
+        if (searchMatchIds.length === 0) return;
+        const nextIndex = (currentMatchIndex + 1) % searchMatchIds.length;
+        setCurrentMatchIndex(nextIndex);
+        scrollToMatch(searchMatchIds[nextIndex]);
+    };
+
+    const prevMatch = () => {
+        if (searchMatchIds.length === 0) return;
+        const prevIndex = (currentMatchIndex - 1 + searchMatchIds.length) % searchMatchIds.length;
+        setCurrentMatchIndex(prevIndex);
+        scrollToMatch(searchMatchIds[prevIndex]);
+    };
+
     const getChatName = (chat: Chat) => {
         if (chat.is_group && chat.name) return chat.name;
         if (chat.is_group) return chat.members.map(m => m.username).join(', ');
@@ -596,7 +645,7 @@ const ChatPage: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="flex items-center space-x-2 shrink-0">
-                                    <div className={`flex items-center bg-slate-900/50 rounded-xl transition-all ${isMsgSearchOpen ? 'w-48 px-3' : 'w-0 overflow-hidden'}`}>
+                                    <div className={`flex items-center bg-slate-900/50 rounded-xl transition-all ${isMsgSearchOpen ? 'w-64 px-3' : 'w-0 overflow-hidden'}`}>
                                         <input
                                             type="text"
                                             value={msgSearchQuery}
@@ -604,8 +653,21 @@ const ChatPage: React.FC = () => {
                                             placeholder="Search messages..."
                                             className="bg-transparent border-none outline-none text-xs text-white w-full py-2"
                                         />
+                                        {isMsgSearchOpen && searchMatchIds.length > 0 && (
+                                            <div className="flex items-center space-x-1 shrink-0 px-2 border-l border-white/10 ml-2">
+                                                <span className="text-[9px] font-bold text-brand-text-dim uppercase whitespace-nowrap">
+                                                    {currentMatchIndex + 1}/{searchMatchIds.length}
+                                                </span>
+                                                <button onClick={prevMatch} className="p-1 hover:text-white text-brand-text-dim transition-colors">
+                                                    <ChevronUp size={14} />
+                                                </button>
+                                                <button onClick={nextMatch} className="p-1 hover:text-white text-brand-text-dim transition-colors">
+                                                    <ChevronDown size={14} />
+                                                </button>
+                                            </div>
+                                        )}
                                         {msgSearchQuery && (
-                                            <button onClick={() => setMsgSearchQuery('')} className="text-brand-text-dim hover:text-white">
+                                            <button onClick={() => { setMsgSearchQuery(''); setSearchMatchIds([]); setCurrentMatchIndex(-1); }} className="text-brand-text-dim hover:text-white ml-2">
                                                 <X size={12} />
                                             </button>
                                         )}
@@ -641,7 +703,7 @@ const ChatPage: React.FC = () => {
                             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
                                 <AnimatePresence mode="popLayout">
                                     {!messagesLoading ? (
-                                        filteredMessages.map((msg) => (
+                                        messages.map((msg) => (
                                             <MessageBubble
                                                 key={msg.id}
                                                 msg={msg}
@@ -656,6 +718,7 @@ const ChatPage: React.FC = () => {
                                                 isSelectionMode={isSelectionMode}
                                                 isSelected={selectedMsgIds.has(msg.id)}
                                                 onSelect={() => toggleMsgSelection(msg.id)}
+                                                isHighlighted={highlightedMsgId === msg.id}
                                             />
                                         ))
                                     ) : (

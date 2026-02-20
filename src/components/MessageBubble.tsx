@@ -15,11 +15,12 @@ interface MessageBubbleProps {
     isSelectionMode?: boolean;
     isSelected?: boolean;
     onSelect?: (id: number) => void;
+    isHighlighted?: boolean;
 }
 
 const getAvatarUrl = (path?: string) => path ? `/avatars/${path}` : null;
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, isGroup, onDelete, onRead, onReadReceiptsClick, isSelectionMode, isSelected, onSelect }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, isGroup, onDelete, onRead, onReadReceiptsClick, isSelectionMode, isSelected, onSelect, isHighlighted }) => {
     const { token } = useAuth();
     const isMe = msg.sender_id === currentUser?.id;
     const downloadUrl = (path: string) => `/files/download/${path}${token ? `?token=${token}` : ''}`;
@@ -67,10 +68,18 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ msg, currentUser, isGroup
 
     return (
         <motion.div
+            id={`msg-${msg.id}`}
             initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.2 }}
-            className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end space-x-2 ${isMe ? 'space-x-reverse' : ''} ${isSelectionMode ? 'cursor-pointer' : ''}`}
+            animate={{
+                opacity: 1,
+                scale: isHighlighted ? [1, 1.05, 1] : 1,
+                backgroundColor: isHighlighted ? 'rgba(var(--color-brand-accent-rgb), 0.3)' : 'transparent'
+            }}
+            transition={{
+                duration: isHighlighted ? 0.5 : 0.2,
+                repeat: isHighlighted ? 1 : 0
+            }}
+            className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end space-x-2 ${isMe ? 'space-x-reverse' : ''} ${isSelectionMode ? 'cursor-pointer' : ''} p-2 rounded-3xl transition-colors`}
             onClick={() => isSelectionMode && isMe && onSelect?.(msg.id)}
         >
             {isSelectionMode && isMe && (
