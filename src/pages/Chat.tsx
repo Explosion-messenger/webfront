@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { format, isSameDay } from 'date-fns';
-import { LogOut, Send, Paperclip, Plus, Search, User as UserIcon, X, Camera, Check, Moon, Trash2, CheckSquare, ChevronUp, ChevronDown, Shield } from 'lucide-react';
+import { LogOut, Send, Paperclip, Plus, Search, User as UserIcon, X, Camera, Check, Moon, Trash2, CheckSquare, ChevronUp, ChevronDown } from 'lucide-react';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +14,6 @@ import GroupSettingsModal from '../components/GroupSettingsModal';
 import MessageContextMenu from '../components/MessageContextMenu';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import BigReaction from '../components/BigReaction';
-import TwoFASetupModal from '../components/TwoFASetupModal';
 import { centerCrop, makeAspectCrop } from 'react-image-crop';
 
 const ChatPage: React.FC = () => {
