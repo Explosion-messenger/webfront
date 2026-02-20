@@ -62,6 +62,21 @@ const ChatPage: React.FC = () => {
     }, []);
 
     useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                if (showNewChat) {
+                    setShowNewChat(false);
+                    setNewChatMode('select');
+                    setSelectedUserIds([]);
+                    setGroupName('');
+                }
+            }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [showNewChat]);
+
+    useEffect(() => {
         // Immediate scroll to bottom without delay to prevent "jumping"
         messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
     }, [messages]);
@@ -427,12 +442,14 @@ const ChatPage: React.FC = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
+                            onClick={() => { setShowNewChat(false); setNewChatMode('select'); setSelectedUserIds([]); setGroupName(''); }}
                             className="absolute inset-0 bg-brand-bg/95 backdrop-blur-2xl z-50 flex items-center justify-center p-6"
                         >
                             <motion.div
                                 initial={{ scale: 0.95, y: 10 }}
                                 animate={{ scale: 1, y: 0 }}
                                 exit={{ scale: 0.95, y: 10 }}
+                                onClick={(e) => e.stopPropagation()}
                                 className="bg-brand-card w-full max-w-lg rounded-[2.5rem] border border-brand-border shadow-3xl overflow-hidden flex flex-col max-h-full"
                             >
                                 <div className="p-8 border-b border-brand-border flex justify-between items-center bg-brand-sidebar/50 shrink-0">

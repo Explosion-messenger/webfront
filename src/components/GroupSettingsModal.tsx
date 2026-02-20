@@ -29,6 +29,14 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
         }
     );
 
+    React.useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && !avatarEditor.showAvatarEditor) onClose();
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [onClose, avatarEditor.showAvatarEditor]);
+
     const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
         const { width, height } = e.currentTarget;
         const initialCrop = centerCrop(
@@ -119,12 +127,14 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={onClose}
             className="absolute inset-0 bg-brand-bg/95 backdrop-blur-2xl z-50 flex items-center justify-center p-6"
         >
             <motion.div
                 initial={{ scale: 0.95, y: 10 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.95, y: 10 }}
+                onClick={(e) => e.stopPropagation()}
                 className="bg-brand-card w-full max-w-2xl rounded-[2.5rem] border border-brand-border shadow-3xl overflow-hidden flex flex-col max-h-[90vh]"
             >
                 <div className="p-8 border-b border-brand-border flex justify-between items-center bg-brand-sidebar/50 shrink-0">
@@ -291,6 +301,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
+                        onClick={(e) => e.stopPropagation()}
                         className="absolute inset-0 bg-brand-bg/95 backdrop-blur-2xl z-[60] flex items-center justify-center p-6"
                     >
                         <motion.div

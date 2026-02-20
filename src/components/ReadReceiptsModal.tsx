@@ -19,17 +19,27 @@ const ReadReceiptsModal: React.FC<ReadReceiptsModalProps> = ({ message, chat, on
         return { user, read_at: rb.read_at };
     }).filter(r => r.user !== undefined);
 
+    React.useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [onClose]);
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={onClose}
             className="absolute inset-0 bg-brand-bg/90 backdrop-blur-xl z-[60] flex items-center justify-center p-6"
         >
             <motion.div
                 initial={{ scale: 0.95, y: 10 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.95, y: 10 }}
+                onClick={(e) => e.stopPropagation()}
                 className="bg-brand-card w-full max-w-sm rounded-[2rem] border border-brand-border shadow-3xl overflow-hidden flex flex-col max-h-[70vh]"
             >
                 <div className="p-6 border-b border-brand-border flex justify-between items-center bg-brand-sidebar/50 shrink-0">
