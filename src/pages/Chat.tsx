@@ -9,6 +9,7 @@ import { useChats, useMessages, useAvatarEditor, useWebSocket } from '../hooks/u
 import { type Chat, type Message, type User } from '../types';
 import ChatListItem from '../components/ChatListItem';
 import MessageBubble from '../components/MessageBubble';
+import GroupSettingsModal from '../components/GroupSettingsModal';
 import { centerCrop, makeAspectCrop } from 'react-image-crop';
 
 const ChatPage: React.FC = () => {
@@ -25,6 +26,7 @@ const ChatPage: React.FC = () => {
     const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
     const [groupName, setGroupName] = useState('');
     const [newChatMode, setNewChatMode] = useState<'select' | 'private' | 'group'>('select');
+    const [showGroupSettings, setShowGroupSettings] = useState(false);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const activeChatIdRef = useRef<number | null>(null);
@@ -91,6 +93,18 @@ const ChatPage: React.FC = () => {
         });
     };
 
+    const handleChatUpdated = (data: any) => {
+        setChats(prev => prev.map(c => {
+            if (c.id === data.id) {
+                return { ...c, ...data };
+            }
+            return c;
+        }));
+        if (activeChatIdRef.current === data.id) {
+            setActiveChat(prev => prev ? { ...prev, ...data } : null);
+        }
+    };
+
     const handleOnlineList = (ids: number[]) => setOnlineUsers(new Set(ids));
 
     const handleUserStatus = (userId: number, online: boolean) => {
@@ -102,7 +116,7 @@ const ChatPage: React.FC = () => {
         });
     };
 
-    useWebSocket(token, handleNewMessage, handleDeleteMessage, handleNewChat, handleOnlineList, handleUserStatus);
+    useWebSocket(token, handleNewMessage, handleDeleteMessage, handleNewChat, handleChatUpdated, handleOnlineList, handleUserStatus);
 
     const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -262,12 +276,19 @@ const ChatPage: React.FC = () => {
                 <AnimatePresence mode="wait">
                     {activeChat ? (
                         <div key={activeChat.id} className="flex-1 flex flex-col min-h-0">
-                            <div className="p-4 glass-header flex items-center justify-between shrink-0">
+                            <div
+                                className={`p-4 glass-header flex items-center justify-between shrink-0 ${activeChat.is_group ? 'cursor-pointer hover:bg-white/5 transition-colors' : ''}`}
+                                onClick={() => activeChat.is_group && setShowGroupSettings(true)}
+                            >
                                 <div className="flex items-center min-w-0">
                                     <div className="relative mr-4 shrink-0">
                                         {activeChat.is_group ? (
-                                            <div className="w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center border border-slate-700">
-                                                <UserIcon size={20} strokeWidth={1.5} className="text-brand-text-dim" />
+                                            <div className="w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center border border-slate-700 overflow-hidden">
+                                                {activeChat.avatar_path ? (
+                                                    <img src={getAvatarUrl(activeChat.avatar_path)!} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <UserIcon size={20} strokeWidth={1.5} className="text-brand-text-dim" />
+                                                )}
                                             </div>
                                         ) : (
                                             <div className="w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center overflow-hidden border border-brand-border shadow-lg">
@@ -508,6 +529,26 @@ const ChatPage: React.FC = () => {
                                 </div>
                             </motion.div>
                         </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Group Settings Modal */}
+                <AnimatePresence>
+                    {showGroupSettings && activeChat && (
+                        <GroupSettingsModal
+                            chat={activeChat}
+                            currentUser={user}
+                            onClose={() => setShowGroupSettings(false)}
+                            onUpdate={(updatedChat) => {
+                                setChats(prev => prev.map(c => c.id === updatedChat.id ? updatedChat : c));
+                                setActiveChat(updatedChat);
+                            }}
+                            onDelete={(chatId) => {
+                                setChats(prev => prev.filter(c => c.id !== chatId));
+                                setActiveChat(null);
+                                setShowGroupSettings(false);
+                            }}
+                        />
                     )}
                 </AnimatePresence>
             </div>

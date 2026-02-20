@@ -27,6 +27,7 @@ export interface Message {
 export interface Chat {
     id: number;
     name?: string;
+    avatar_path?: string;
     is_group: boolean;
     members: User[];
     last_message?: Message;

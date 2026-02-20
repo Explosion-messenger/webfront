@@ -33,8 +33,12 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive
         >
             <div className="relative flex-shrink-0 z-10">
                 {chat.is_group ? (
-                    <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center border border-slate-700 shadow-lg">
-                        <UserIcon size={24} strokeWidth={1.5} className="text-brand-text-dim" />
+                    <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center border border-slate-700 shadow-lg overflow-hidden">
+                        {chat.avatar_path ? (
+                            <img src={getAvatarUrl(chat.avatar_path)!} className="w-full h-full object-cover" />
+                        ) : (
+                            <UserIcon size={24} strokeWidth={1.5} className="text-brand-text-dim" />
+                        )}
                     </div>
                 ) : (
                     <>

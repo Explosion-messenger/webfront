@@ -7,6 +7,7 @@ export function useWebSocket(
     onNewMessage: (msg: Message) => void,
     onDeleteMessage: (messageId: number, chatId: number) => void,
     onNewChat: (chat: Chat) => void,
+    onChatUpdated: (data: any) => void,
     onOnlineList: (ids: number[]) => void,
     onUserStatus: (userId: number, online: boolean) => void,
 ) {
@@ -19,6 +20,7 @@ export function useWebSocket(
     const onNewMessageRef = useRef(onNewMessage);
     const onDeleteMessageRef = useRef(onDeleteMessage);
     const onNewChatRef = useRef(onNewChat);
+    const onChatUpdatedRef = useRef(onChatUpdated);
     const onOnlineListRef = useRef(onOnlineList);
     const onUserStatusRef = useRef(onUserStatus);
 
@@ -26,6 +28,7 @@ export function useWebSocket(
     useEffect(() => { onNewMessageRef.current = onNewMessage; }, [onNewMessage]);
     useEffect(() => { onDeleteMessageRef.current = onDeleteMessage; }, [onDeleteMessage]);
     useEffect(() => { onNewChatRef.current = onNewChat; }, [onNewChat]);
+    useEffect(() => { onChatUpdatedRef.current = onChatUpdated; }, [onChatUpdated]);
     useEffect(() => { onOnlineListRef.current = onOnlineList; }, [onOnlineList]);
     useEffect(() => { onUserStatusRef.current = onUserStatus; }, [onUserStatus]);
 
@@ -53,6 +56,8 @@ export function useWebSocket(
                         onDeleteMessageRef.current(data.data.message_id, data.data.chat_id);
                     } else if (data.type === 'new_chat') {
                         onNewChatRef.current(data.data);
+                    } else if (data.type === 'chat_updated') {
+                        onChatUpdatedRef.current(data.data);
                     } else if (data.type === 'online_list') {
                         onOnlineListRef.current(data.data);
                     } else if (data.type === 'user_status') {
