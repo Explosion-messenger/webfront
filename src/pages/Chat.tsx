@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { format, isSameDay } from 'date-fns';
 import { LogOut, Send, Paperclip, Plus, Search, User as UserIcon, X, Camera, Check, Moon, Trash2, CheckSquare, ChevronUp, ChevronDown } from 'lucide-react';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -703,24 +704,37 @@ const ChatPage: React.FC = () => {
                             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
                                 <AnimatePresence mode="popLayout">
                                     {!messagesLoading ? (
-                                        messages.map((msg) => (
-                                            <MessageBubble
-                                                key={msg.id}
-                                                msg={msg}
-                                                currentUser={user}
-                                                isGroup={activeChat.is_group}
-                                                onDelete={setMessageToDelete}
-                                                onRead={markMessageRead}
-                                                onReadReceiptsClick={(m, pos) => {
-                                                    setSelectedMessageForReceipts(m);
-                                                    setReceiptsPosition(pos);
-                                                }}
-                                                isSelectionMode={isSelectionMode}
-                                                isSelected={selectedMsgIds.has(msg.id)}
-                                                onSelect={() => toggleMsgSelection(msg.id)}
-                                                isHighlighted={highlightedMsgId === msg.id}
-                                            />
-                                        ))
+                                        messages.map((msg, index) => {
+                                            const prevMsg = messages[index - 1];
+                                            const showDate = !prevMsg || !isSameDay(new Date(msg.created_at), new Date(prevMsg.created_at));
+
+                                            return (
+                                                <React.Fragment key={msg.id}>
+                                                    {showDate && (
+                                                        <div className="flex justify-center my-8 first:mt-2">
+                                                            <div className="px-5 py-1.5 rounded-full bg-brand-sidebar/50 border border-brand-border text-[10px] font-black text-brand-text-dim uppercase tracking-[0.2em] shadow-lg backdrop-blur-md">
+                                                                {format(new Date(msg.created_at), 'd MMMM, yyyy')}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    <MessageBubble
+                                                        msg={msg}
+                                                        currentUser={user}
+                                                        isGroup={activeChat.is_group}
+                                                        onDelete={setMessageToDelete}
+                                                        onRead={markMessageRead}
+                                                        onReadReceiptsClick={(m, pos) => {
+                                                            setSelectedMessageForReceipts(m);
+                                                            setReceiptsPosition(pos);
+                                                        }}
+                                                        isSelectionMode={isSelectionMode}
+                                                        isSelected={selectedMsgIds.has(msg.id)}
+                                                        onSelect={() => toggleMsgSelection(msg.id)}
+                                                        isHighlighted={highlightedMsgId === msg.id}
+                                                    />
+                                                </React.Fragment>
+                                            );
+                                        })
                                     ) : (
                                         <div className="flex flex-col space-y-4 animate-pulse">
                                             {[1, 2, 3].map(i => (
