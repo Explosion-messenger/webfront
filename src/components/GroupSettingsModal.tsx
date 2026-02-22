@@ -21,6 +21,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<User[]>([]);
     const [isUpdating, setIsUpdating] = useState(false);
+    const isAdmin = chat.members.find(m => m.id === currentUser?.id)?.is_chat_admin;
 
     const avatarEditor = useAvatarEditor(
         async (formData) => {
@@ -109,6 +110,18 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
         }
     };
 
+    const handleToggleAdmin = async (userId: number, currentAdminStatus: boolean) => {
+        try {
+            const resp = await api.patch(`/chats/${chat.id}/members/${userId}/admin`, {
+                user_id: userId,
+                is_admin: !currentAdminStatus
+            });
+            onUpdate(resp.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const handleDeleteChat = async () => {
         if (!window.confirm('Are you sure you want to delete this group? This action cannot be undone.')) return;
         try {
@@ -134,7 +147,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                 initial={{ scale: 0.95, y: 10 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.95, y: 10 }}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 className="bg-brand-card w-full max-w-2xl rounded-[2.5rem] border border-brand-border shadow-3xl overflow-hidden flex flex-col max-h-[90vh]"
             >
                 <div className="p-8 border-b border-brand-border flex justify-between items-center bg-brand-sidebar/50 shrink-0">
@@ -154,12 +167,14 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                                 ) : (
                                     <UserIcon size={48} className="text-brand-text-dim" />
                                 )}
-                                <div className="absolute inset-0 bg-brand-bg/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                                    <label className="cursor-pointer p-3 bg-brand-accent rounded-2xl hover:scale-110 transition-transform shadow-glow">
-                                        <Camera size={24} className="text-white" />
-                                        <input type="file" ref={avatarEditor.fileInputRef} className="hidden" accept="image/*" onChange={avatarEditor.onSelectFile} />
-                                    </label>
-                                </div>
+                                {isAdmin && (
+                                    <div className="absolute inset-0 bg-brand-bg/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                                        <label className="cursor-pointer p-3 bg-brand-accent rounded-2xl hover:scale-110 transition-transform shadow-glow">
+                                            <Camera size={24} className="text-white" />
+                                            <input type="file" ref={avatarEditor.fileInputRef} className="hidden" accept="image/*" onChange={avatarEditor.onSelectFile} />
+                                        </label>
+                                    </div>
+                                )}
                             </div>
                             <div className="absolute -bottom-2 -right-2 bg-brand-accent p-2 rounded-xl shadow-glow">
                                 <Check size={16} className="text-white" />
@@ -173,7 +188,8 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="GROUP NAME"
-                                    className="w-full bg-slate-900/50 border border-brand-border rounded-2xl px-6 py-4 focus:outline-none focus:border-brand-accent text-sm tracking-widest uppercase font-bold text-white text-center"
+                                    disabled={!isAdmin}
+                                    className={`w-full bg-slate-900/50 border border-brand-border rounded-2xl px-6 py-4 focus:outline-none focus:border-brand-accent text-sm tracking-widest uppercase font-bold text-white text-center ${!isAdmin && 'opacity-70 cursor-not-allowed'}`}
                                 />
                                 {name !== chat.name && (
                                     <button
@@ -217,18 +233,32 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                                                 )}
                                             </div>
                                             <span className="text-sm font-bold text-white uppercase tracking-wider">{member.username}</span>
+                                            {member.is_chat_admin && (
+                                                <span className="text-[8px] bg-brand-accent/20 text-brand-accent px-1.5 py-0.5 rounded uppercase font-black tracking-tighter shadow-glow-green border border-brand-accent/30">Owner</span>
+                                            )}
                                             {member.id === currentUser?.id && (
                                                 <span className="text-[8px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded uppercase font-black">You</span>
                                             )}
                                         </div>
-                                        {chat.members.length > 1 && (
-                                            <button
-                                                onClick={() => handleRemoveMember(member.id)}
-                                                className="p-2 text-brand-text-dim hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
-                                            >
-                                                {member.id === currentUser?.id ? <LogOut size={16} /> : <Trash2 size={16} />}
-                                            </button>
-                                        )}
+                                        <div className="flex items-center space-x-1">
+                                            {isAdmin && member.id !== currentUser?.id && (
+                                                <button
+                                                    onClick={() => handleToggleAdmin(member.id, member.is_chat_admin || false)}
+                                                    className={`p-2 rounded-lg transition-all ${member.is_chat_admin ? 'text-red-400 hover:bg-red-400/10' : 'text-brand-accent hover:bg-brand-accent/10'}`}
+                                                    title={member.is_chat_admin ? "Dismiss as Admin" : "Promote to Admin"}
+                                                >
+                                                    {member.is_chat_admin ? <X size={14} /> : <Plus size={14} />}
+                                                </button>
+                                            )}
+                                            {chat.members.length > 1 && (isAdmin || member.id === currentUser?.id) && (
+                                                <button
+                                                    onClick={() => handleRemoveMember(member.id)}
+                                                    className="p-2 text-brand-text-dim hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                                                >
+                                                    {member.id === currentUser?.id ? <LogOut size={16} /> : <Trash2 size={16} />}
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -282,13 +312,17 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                 </div>
 
                 <div className="p-8 bg-brand-sidebar/50 border-t border-brand-border flex items-center justify-between shrink-0">
-                    <button
-                        onClick={handleDeleteChat}
-                        className="px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-red-500 hover:bg-red-500/10 rounded-xl transition-all flex items-center space-x-2"
-                    >
-                        <Trash2 size={16} />
-                        <span>Purge Group</span>
-                    </button>
+                    {isAdmin ? (
+                        <button
+                            onClick={handleDeleteChat}
+                            className="px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-red-500 hover:bg-red-500/10 rounded-xl transition-all flex items-center space-x-2"
+                        >
+                            <Trash2 size={16} />
+                            <span>Purge Group</span>
+                        </button>
+                    ) : (
+                        <div />
+                    )}
                     <button
                         onClick={() => handleRemoveMember(currentUser?.id || 0)}
                         className="px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-brand-text-dim hover:text-white rounded-xl transition-all flex items-center space-x-2"
@@ -306,7 +340,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
                         className="absolute inset-0 bg-brand-bg/95 backdrop-blur-2xl z-[60] flex items-center justify-center p-6"
                     >
                         <motion.div
