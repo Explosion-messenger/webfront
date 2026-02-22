@@ -979,7 +979,6 @@ const ChatPage: React.FC = () => {
                                                             setReceiptsPosition(pos);
                                                         }}
                                                         onReactionToggle={handleToggleReaction}
-                                                        onReply={setReplyToMessage}
                                                         isSelectionMode={isSelectionMode}
                                                         isSelected={selectedMsgIds.has(msg.id)}
                                                         onSelect={() => toggleMsgSelection(msg.id)}

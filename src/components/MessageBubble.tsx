@@ -16,12 +16,11 @@ interface MessageBubbleProps {
     isSelected?: boolean;
     onSelect?: (id: number) => void;
     isHighlighted?: boolean;
-    onReply?: (message: Message) => void;
 }
 
 const getAvatarUrl = (path?: string) => path ? `/avatars/${path}` : null;
 
-const MessageBubble: React.FC<MessageBubbleProps & { onReactionToggle?: (msgId: number, emoji: string) => void }> = ({ msg, currentUser, isGroup, onDelete, onRead, onReadReceiptsClick, isSelectionMode, isSelected, onSelect, isHighlighted, onReactionToggle, onReply }) => {
+const MessageBubble: React.FC<MessageBubbleProps & { onReactionToggle?: (msgId: number, emoji: string) => void }> = ({ msg, currentUser, isGroup, onDelete, onRead, onReadReceiptsClick, isSelectionMode, isSelected, onSelect, isHighlighted, onReactionToggle }) => {
     const { token } = useAuth();
     const isMe = msg.sender_id === currentUser?.id;
     const downloadUrl = (path: string) => `/api/v1/files/download/${path}${token ? `?token=${token}` : ''}`;
