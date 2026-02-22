@@ -41,6 +41,11 @@ export interface Message {
     created_at: string;
     read_by: MessageRead[];
     reactions: MessageReaction[];
+    reply_to?: {
+        id: number;
+        text?: string;
+        sender: User;
+    };
 }
 
 export interface Chat {

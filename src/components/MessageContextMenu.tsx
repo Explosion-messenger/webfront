@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { User as UserIcon, CheckCheck } from 'lucide-react';
+import { User as UserIcon, CheckCheck, Reply } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { type Message, type Chat } from '../types';
@@ -10,6 +10,7 @@ interface MessageContextMenuProps {
     position: { x: number, y: number };
     onClose: () => void;
     onReactionToggle: (emoji: string) => void;
+    onReply: (message: Message) => void;
     currentUserId?: number;
 }
 
@@ -17,7 +18,7 @@ const getAvatarUrl = (path?: string) => path ? `/avatars/${path}` : null;
 
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥', '🍌', '🐳'];
 
-const MessageContextMenu: React.FC<MessageContextMenuProps> = ({ message, chat, position, onClose, onReactionToggle, currentUserId }) => {
+const MessageContextMenu: React.FC<MessageContextMenuProps> = ({ message, chat, position, onClose, onReactionToggle, onReply, currentUserId }) => {
     const popupRef = useRef<HTMLDivElement>(null);
 
     const readers = message.read_by.map(rb => {
@@ -81,6 +82,19 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({ message, chat, 
                         );
                     })}
                 </div>
+            </div>
+            {/* Actions */}
+            <div className="p-1 border-b border-brand-border flex items-center bg-brand-sidebar/40">
+                <button
+                    onClick={() => {
+                        onReply(message);
+                        onClose();
+                    }}
+                    className="flex-1 flex items-center justify-center space-x-2 py-2.5 hover:bg-brand-accent/20 transition-all group"
+                >
+                    <Reply size={16} className="text-brand-accent group-hover:scale-110 transition-transform" />
+                    <span className="text-[11px] font-black uppercase tracking-wider text-white">Reply</span>
+                </button>
             </div>
 
             {/* Read Status Header */}

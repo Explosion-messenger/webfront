@@ -16,11 +16,12 @@ interface MessageBubbleProps {
     isSelected?: boolean;
     onSelect?: (id: number) => void;
     isHighlighted?: boolean;
+    onReply?: (message: Message) => void;
 }
 
 const getAvatarUrl = (path?: string) => path ? `/avatars/${path}` : null;
 
-const MessageBubble: React.FC<MessageBubbleProps & { onReactionToggle?: (msgId: number, emoji: string) => void }> = ({ msg, currentUser, isGroup, onDelete, onRead, onReadReceiptsClick, isSelectionMode, isSelected, onSelect, isHighlighted, onReactionToggle }) => {
+const MessageBubble: React.FC<MessageBubbleProps & { onReactionToggle?: (msgId: number, emoji: string) => void }> = ({ msg, currentUser, isGroup, onDelete, onRead, onReadReceiptsClick, isSelectionMode, isSelected, onSelect, isHighlighted, onReactionToggle, onReply }) => {
     const { token } = useAuth();
     const isMe = msg.sender_id === currentUser?.id;
     const downloadUrl = (path: string) => `/api/v1/files/download/${path}${token ? `?token=${token}` : ''}`;
@@ -127,6 +128,28 @@ const MessageBubble: React.FC<MessageBubbleProps & { onReactionToggle?: (msgId: 
                         <span className="block text-[10px] uppercase tracking-widest font-bold text-brand-accent mb-1">
                             {msg.sender.username}
                         </span>
+                    )}
+
+                    {msg.reply_to && (
+                        <div
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                const el = document.getElementById(`msg-${msg.reply_to!.id}`);
+                                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                // Add a temporary flash effect
+                                el?.classList.add('bg-brand-accent/30');
+                                setTimeout(() => el?.classList.remove('bg-brand-accent/30'), 1000);
+                            }}
+                            className={`mb-2 p-2 rounded-xl border-l-2 cursor-pointer transition-all hover:bg-white/5 ${isMe ? 'bg-white/10 border-white/40' : 'bg-brand-bg/50 border-brand-accent'
+                                }`}
+                        >
+                            <p className="text-[10px] font-black uppercase tracking-tighter opacity-70 mb-0.5">
+                                {msg.reply_to.sender.username}
+                            </p>
+                            <p className="text-xs opacity-80 truncate leading-tight">
+                                {msg.reply_to.text || 'Attached File'}
+                            </p>
+                        </div>
                     )}
 
                     {msg.text && <p className="whitespace-pre-wrap text-sm leading-relaxed font-normal">{msg.text}</p>}

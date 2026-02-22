@@ -48,6 +48,7 @@ const ChatPage: React.FC = () => {
     const [activeBigReaction, setActiveBigReaction] = useState<{ emoji: string, timestamp: number } | null>(null);
     const [unreadBottomCount, setUnreadBottomCount] = useState(0);
     const isAtBottomRef = useRef(true);
+    const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
 
     // Chat Actions Context Menu
     const [chatMenuPos, setChatMenuPos] = useState<{ x: number, y: number } | null>(null);
@@ -591,10 +592,16 @@ const ChatPage: React.FC = () => {
         if (!inputText.trim() || !activeChat || isSending) return;
 
         const text = inputText;
+        const replyId = replyToMessage?.id;
         setInputText('');
+        setReplyToMessage(null);
         setIsSending(true);
         try {
-            await api.post('/messages/send', { chat_id: activeChat.id, text });
+            await api.post('/messages/send', {
+                chat_id: activeChat.id,
+                text,
+                reply_to_id: replyId
+            });
         } catch (err) {
             console.error(err);
             setInputText(text); // Restore on error
@@ -611,7 +618,12 @@ const ChatPage: React.FC = () => {
         formData.append('file', file);
         try {
             const uploadResp = await api.post('/files/upload', formData);
-            await api.post('/messages/send', { chat_id: activeChat.id, file_id: uploadResp.data.id });
+            await api.post('/messages/send', {
+                chat_id: activeChat.id,
+                file_id: uploadResp.data.id,
+                reply_to_id: replyToMessage?.id
+            });
+            setReplyToMessage(null);
         } catch (err) { console.error(err); }
     };
 
@@ -967,6 +979,7 @@ const ChatPage: React.FC = () => {
                                                             setReceiptsPosition(pos);
                                                         }}
                                                         onReactionToggle={handleToggleReaction}
+                                                        onReply={setReplyToMessage}
                                                         isSelectionMode={isSelectionMode}
                                                         isSelected={selectedMsgIds.has(msg.id)}
                                                         onSelect={() => toggleMsgSelection(msg.id)}
@@ -1008,6 +1021,33 @@ const ChatPage: React.FC = () => {
                             </AnimatePresence>
 
                             <div className="p-6 border-t border-brand-border bg-brand-sidebar/50 shrink-0">
+                                <AnimatePresence>
+                                    {replyToMessage && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="flex items-center space-x-3 p-3 bg-brand-accent/10 border-l-4 border-brand-accent rounded-r-xl mb-4 relative group">
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-[10px] uppercase font-black text-brand-accent tracking-tighter mb-1">
+                                                        Replying to {replyToMessage.sender.username}
+                                                    </p>
+                                                    <p className="text-xs text-brand-text-dim truncate">
+                                                        {replyToMessage.text || (replyToMessage.file ? 'Attached File' : 'Message')}
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={() => setReplyToMessage(null)}
+                                                    className="p-1 hover:text-white transition-colors"
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                                 <form onSubmit={sendMessage} className="flex items-center space-x-4">
                                     <label className="cursor-pointer p-3 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-all border border-brand-border shrink-0">
                                         <Paperclip size={20} strokeWidth={1.5} className="text-brand-text-dim hover:text-brand-accent" />
@@ -1231,6 +1271,7 @@ const ChatPage: React.FC = () => {
                             position={receiptsPosition}
                             onClose={() => setSelectedMessageForReceipts(null)}
                             onReactionToggle={(emoji) => handleToggleReaction(selectedMessageForReceipts.id, emoji)}
+                            onReply={setReplyToMessage}
                             currentUserId={user?.id}
                         />
                     )}
