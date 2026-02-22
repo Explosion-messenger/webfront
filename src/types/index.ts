@@ -5,6 +5,7 @@ export interface User {
     avatar_path?: string;
     is_admin: boolean;
     is_chat_admin?: boolean;
+    is_chat_owner?: boolean;
     is_verified: boolean;
     is_2fa_enabled: boolean;
     created_at: string;

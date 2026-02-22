@@ -21,7 +21,9 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<User[]>([]);
     const [isUpdating, setIsUpdating] = useState(false);
-    const isAdmin = chat.members.find(m => m.id === currentUser?.id)?.is_chat_admin;
+    const membership = chat.members.find(m => m.id === currentUser?.id);
+    const isOwner = membership?.is_chat_owner;
+    const isAdmin = membership?.is_chat_admin || isOwner;
 
     const avatarEditor = useAvatarEditor(
         async (formData) => {
@@ -233,15 +235,17 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                                                 )}
                                             </div>
                                             <span className="text-sm font-bold text-white uppercase tracking-wider">{member.username}</span>
-                                            {member.is_chat_admin && (
+                                            {member.is_chat_owner ? (
                                                 <span className="text-[8px] bg-brand-accent/20 text-brand-accent px-1.5 py-0.5 rounded uppercase font-black tracking-tighter shadow-glow-green border border-brand-accent/30">Owner</span>
-                                            )}
+                                            ) : member.is_chat_admin ? (
+                                                <span className="text-[8px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded uppercase font-black border border-slate-600">Admin</span>
+                                            ) : null}
                                             {member.id === currentUser?.id && (
-                                                <span className="text-[8px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded uppercase font-black">You</span>
+                                                <span className="text-[8px] bg-slate-800/80 text-brand-text-dim px-1.5 py-0.5 rounded uppercase font-black border border-brand-border/30">You</span>
                                             )}
                                         </div>
                                         <div className="flex items-center space-x-1">
-                                            {isAdmin && member.id !== currentUser?.id && (
+                                            {isOwner && member.id !== currentUser?.id && (
                                                 <button
                                                     onClick={() => handleToggleAdmin(member.id, member.is_chat_admin || false)}
                                                     className={`p-2 rounded-lg transition-all ${member.is_chat_admin ? 'text-red-400 hover:bg-red-400/10' : 'text-brand-accent hover:bg-brand-accent/10'}`}
@@ -312,7 +316,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                 </div>
 
                 <div className="p-8 bg-brand-sidebar/50 border-t border-brand-border flex items-center justify-between shrink-0">
-                    {isAdmin ? (
+                    {isOwner ? (
                         <button
                             onClick={handleDeleteChat}
                             className="px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-red-500 hover:bg-red-500/10 rounded-xl transition-all flex items-center space-x-2"
