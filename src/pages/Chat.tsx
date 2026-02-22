@@ -202,9 +202,14 @@ const ChatPage: React.FC = () => {
         setChats(prev => {
             const chatExists = prev.find(c => c.id === msg.chat_id);
             if (chatExists) {
-                return prev.map(c =>
-                    c.id === msg.chat_id ? { ...c, last_message: msg } : c
-                ).sort((a, b) => {
+                return prev.map(c => {
+                    if (c.id !== msg.chat_id) return c;
+                    // Increment unread count if the message is from someone else and this chat isn't active
+                    const isActive = Number(activeChatIdRef.current) === Number(msg.chat_id);
+                    const isMyMsg = msg.sender_id === user?.id;
+                    const newUnread = (!isActive && !isMyMsg) ? (c.unread_count || 0) + 1 : c.unread_count;
+                    return { ...c, last_message: msg, unread_count: newUnread };
+                }).sort((a, b) => {
                     const dateA = a.last_message ? new Date(a.last_message.created_at).getTime() : 0;
                     const dateB = b.last_message ? new Date(b.last_message.created_at).getTime() : 0;
                     return dateB - dateA;
@@ -264,6 +269,14 @@ const ChatPage: React.FC = () => {
             }
             return m;
         }));
+        // If the current user read a message, decrement unread_count for that chat
+        if (data.user_id === user?.id) {
+            setChats(prev => prev.map(c =>
+                c.id === data.chat_id
+                    ? { ...c, unread_count: Math.max(0, (c.unread_count || 0) - 1) }
+                    : c
+            ));
+        }
     };
 
     const handleUserStatus = (userId: number, status: string) => {
@@ -779,7 +792,13 @@ const ChatPage: React.FC = () => {
                             isActive={activeChat?.id === chat.id}
                             userStatus={getUserStatus(chat)}
                             typingUsers={Object.values(typingUsers[chat.id] || {})}
-                            onClick={() => setActiveChat(chat)}
+                            onClick={() => {
+                                setActiveChat(chat);
+                                // Clear unread count immediately when opening the chat
+                                setChats(prev => prev.map(c =>
+                                    c.id === chat.id ? { ...c, unread_count: 0 } : c
+                                ));
+                            }}
                             onContextMenu={(e) => onChatContextMenu(e, chat)}
                         />
                     ))}
