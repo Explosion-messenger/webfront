@@ -79,28 +79,41 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive
                         </span>
                     )}
                 </div>
-                {typingUsers && typingUsers.length > 0 ? (
-                    <div className="flex items-center space-x-1.5 overflow-hidden">
-                        <p className="text-xs text-green-400 font-bold truncate">
-                            {(() => {
-                                if (!chat.is_group) return 'typing';
-                                if (typingUsers.length === 1) return `${typingUsers[0].username} is typing`;
-                                if (typingUsers.length === 2) return `${typingUsers[0].username} & ${typingUsers[1].username} are typing`;
-                                return `${typingUsers[0].username}, ${typingUsers[1].username} & ${typingUsers.length - 2} more are typing`;
-                            })()}
-                        </p>
-                        <div className="flex space-x-1 mb-0.5 shrink-0">
-                            <span className="w-1 h-1 bg-green-400 rounded-full animate-pulse-dot" style={{ animationDelay: '0ms' }} />
-                            <span className="w-1 h-1 bg-green-400 rounded-full animate-pulse-dot" style={{ animationDelay: '200ms' }} />
-                            <span className="w-1 h-1 bg-green-400 rounded-full animate-pulse-dot" style={{ animationDelay: '400ms' }} />
+                <div className="flex justify-between items-start">
+                    {typingUsers && typingUsers.length > 0 ? (
+                        <div className="flex items-center space-x-1.5 overflow-hidden">
+                            <p className="text-xs text-green-400 font-bold truncate">
+                                {(() => {
+                                    if (!chat.is_group) return 'typing';
+                                    if (typingUsers.length === 1) return `${typingUsers[0].username} is typing`;
+                                    if (typingUsers.length === 2) return `${typingUsers[0].username} & ${typingUsers[1].username} are typing`;
+                                    return `${typingUsers[0].username}, ${typingUsers[1].username} & ${typingUsers.length - 2} more are typing`;
+                                })()}
+                            </p>
+                            <div className="flex space-x-1 mb-0.5 shrink-0">
+                                <span className="w-1 h-1 bg-green-400 rounded-full animate-pulse-dot" style={{ animationDelay: '0ms' }} />
+                                <span className="w-1 h-1 bg-green-400 rounded-full animate-pulse-dot" style={{ animationDelay: '200ms' }} />
+                                <span className="w-1 h-1 bg-green-400 rounded-full animate-pulse-dot" style={{ animationDelay: '400ms' }} />
+                            </div>
                         </div>
-                    </div>
-                ) : chat.last_message ? (
-                    <p className="text-xs text-brand-text-dim truncate font-normal leading-tight">
-                        {chat.last_message.sender_id === currentUser?.id ? 'You: ' : ''}
-                        {chat.last_message.text || 'Shared a file'}
-                    </p>
-                ) : null}
+                    ) : chat.last_message ? (
+                        <p className={`text-xs ${chat.unread_count > 0 ? 'text-white font-bold' : 'text-brand-text-dim font-normal'} truncate leading-tight flex-1 mr-2`}>
+                            {chat.last_message.sender_id === currentUser?.id ? <span className="text-brand-text-dim/80 font-normal">You: </span> : ''}
+                            {chat.last_message.text || 'Shared a file'}
+                        </p>
+                    ) : <span className="flex-1" />}
+
+                    {chat.unread_count > 0 && (
+                        <div className="flex flex-col items-end shrink-0">
+                            <span className="text-[9px] uppercase font-black text-brand-away tracking-widest leading-none mb-1 shadow-glow-yellow">
+                                unread
+                            </span>
+                            <div className="bg-brand-away text-brand-bg text-[10px] font-black rounded-full min-w-[18px] h-[18px] px-1.5 flex items-center justify-center">
+                                {chat.unread_count > 99 ? '99+' : chat.unread_count}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {isActive && (

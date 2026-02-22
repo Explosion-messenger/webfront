@@ -51,4 +51,5 @@ export interface Chat {
     members: User[];
     last_message?: Message;
     created_at: string;
+    unread_count: number;
 }
