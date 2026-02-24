@@ -31,7 +31,7 @@ const App: React.FC = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route
-              path="/"
+              path="/:chatId?"
               element={
                 <ProtectedRoute>
                   <Chat />

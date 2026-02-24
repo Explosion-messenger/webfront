@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { format, isSameDay } from 'date-fns';
 import { LogOut, Send, Paperclip, Plus, Search, User as UserIcon, X, Camera, Check, Moon, Trash2, CheckSquare, ChevronUp, ChevronDown } from 'lucide-react';
 import ReactCrop from 'react-image-crop';
@@ -18,6 +19,8 @@ import { centerCrop, makeAspectCrop } from 'react-image-crop';
 
 const ChatPage: React.FC = () => {
     const { user, logout, token, refreshUser } = useAuth();
+    const navigate = useNavigate();
+    const { chatId: urlChatId } = useParams();
     const { chats, setChats, fetchChats } = useChats();
     const [activeChat, setActiveChat] = useState<Chat | null>(null);
     const { messages, setMessages, loading: messagesLoading } = useMessages(activeChat?.id || null);
@@ -79,7 +82,23 @@ const ChatPage: React.FC = () => {
     }, [user?.id]);
 
     useEffect(() => {
-        activeChatIdRef.current = activeChat?.id || null;
+        if (urlChatId && chats.length > 0) {
+            const foundChat = chats.find(c => c.id === Number(urlChatId));
+            if (foundChat) {
+                setActiveChat(foundChat);
+            }
+        } else if (!urlChatId) {
+            setActiveChat(null);
+        }
+    }, [urlChatId, chats]);
+
+    useEffect(() => {
+        if (!activeChat) {
+            activeChatIdRef.current = null;
+            return;
+        }
+
+        activeChatIdRef.current = activeChat.id;
         setInputText(''); // Clear input when switching chats
         setIsSelectionMode(false);
         setSelectedMsgIds(new Set());
@@ -90,6 +109,14 @@ const ChatPage: React.FC = () => {
         setSearchMatchIds([]);
         setCurrentMatchIndex(-1);
         setHighlightedMsgId(null);
+
+        // Clear unread count locally and on backend
+        if (activeChat.unread_count > 0) {
+            setChats(prev => prev.map(c =>
+                c.id === activeChat.id ? { ...c, unread_count: 0 } : c
+            ));
+            markChatRead();
+        }
     }, [activeChat?.id]);
 
     useEffect(() => {
@@ -292,7 +319,7 @@ const ChatPage: React.FC = () => {
     const handleChatDeleted = (chatId: number) => {
         setChats(prev => prev.filter(c => c.id !== chatId));
         if (activeChatIdRef.current === chatId) {
-            setActiveChat(null);
+            navigate('/');
             setShowGroupSettings(false);
         }
     };
@@ -654,7 +681,7 @@ const ChatPage: React.FC = () => {
                 if (exists) return prev;
                 return [newChat, ...prev];
             });
-            setActiveChat(newChat);
+            navigate(`/${newChat.id}`);
             setShowNewChat(false);
             setGroupName('');
             setSelectedUserIds([]);
@@ -804,13 +831,7 @@ const ChatPage: React.FC = () => {
                             isActive={activeChat?.id === chat.id}
                             userStatus={getUserStatus(chat)}
                             typingUsers={Object.values(typingUsers[chat.id] || {})}
-                            onClick={() => {
-                                setActiveChat(chat);
-                                // Clear unread count immediately when opening the chat
-                                setChats(prev => prev.map(c =>
-                                    c.id === chat.id ? { ...c, unread_count: 0 } : c
-                                ));
-                            }}
+                            onClick={() => navigate(`/${chat.id}`)}
                             onContextMenu={(e) => onChatContextMenu(e, chat)}
                         />
                     ))}
@@ -1255,7 +1276,7 @@ const ChatPage: React.FC = () => {
                             }}
                             onDelete={(chatId) => {
                                 setChats(prev => prev.filter(c => c.id !== chatId));
-                                setActiveChat(null);
+                                navigate('/');
                                 setShowGroupSettings(false);
                             }}
                         />
