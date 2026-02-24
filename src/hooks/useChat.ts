@@ -130,22 +130,33 @@ export function useWebSocket(
 
 export function useChats() {
     const [chats, setChats] = useState<Chat[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchChats = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const resp = await api.get('/chats');
             const sorted = resp.data.sort((a: Chat, b: Chat) => {
-                const da = a.last_message ? new Date(a.last_message.created_at).getTime() : 0;
-                const db = b.last_message ? new Date(b.last_message.created_at).getTime() : 0;
-                return db - da;
+                const timeA = a.last_message
+                    ? new Date(a.last_message.created_at).getTime()
+                    : new Date(a.created_at).getTime();
+                const timeB = b.last_message
+                    ? new Date(b.last_message.created_at).getTime()
+                    : new Date(b.created_at).getTime();
+                return timeB - timeA;
             });
             setChats(sorted);
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
+            setError(err.response?.data?.detail || 'Failed to load chats');
+        } finally {
+            setLoading(false);
         }
     };
 
-    return { chats, setChats, fetchChats };
+    return { chats, setChats, fetchChats, loading, error };
 }
 
 export function useMessages(activeChatId: number | null) {

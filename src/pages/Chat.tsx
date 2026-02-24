@@ -21,7 +21,7 @@ const ChatPage: React.FC = () => {
     const { user, logout, token, refreshUser } = useAuth();
     const navigate = useNavigate();
     const { chatId: urlChatId } = useParams();
-    const { chats, setChats, fetchChats } = useChats();
+    const { chats, setChats, fetchChats, loading: chatsLoading, error: chatsError } = useChats();
     const [activeChat, setActiveChat] = useState<Chat | null>(null);
     const { messages, setMessages, loading: messagesLoading } = useMessages(activeChat?.id || null);
 
@@ -86,11 +86,22 @@ const ChatPage: React.FC = () => {
             const foundChat = chats.find(c => c.id === Number(urlChatId));
             if (foundChat) {
                 setActiveChat(foundChat);
+                localStorage.setItem('activeChatId', urlChatId);
             }
         } else if (!urlChatId) {
-            setActiveChat(null);
+            const lastChatId = localStorage.getItem('activeChatId');
+            if (lastChatId && chats.length > 0) {
+                const foundChat = chats.find(c => c.id === Number(lastChatId));
+                if (foundChat) {
+                    navigate(`/${lastChatId}`);
+                } else {
+                    setActiveChat(null);
+                }
+            } else {
+                setActiveChat(null);
+            }
         }
-    }, [urlChatId, chats]);
+    }, [urlChatId, chats, navigate]);
 
     useEffect(() => {
         if (!activeChat) {
@@ -823,18 +834,36 @@ const ChatPage: React.FC = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto space-y-1 py-2 custom-scroll">
-                    {chats.map(chat => (
-                        <ChatListItem
-                            key={chat.id}
-                            chat={chat}
-                            currentUser={user}
-                            isActive={activeChat?.id === chat.id}
-                            userStatus={getUserStatus(chat)}
-                            typingUsers={Object.values(typingUsers[chat.id] || {})}
-                            onClick={() => navigate(`/${chat.id}`)}
-                            onContextMenu={(e) => onChatContextMenu(e, chat)}
-                        />
-                    ))}
+                    {chatsLoading ? (
+                        <div className="flex flex-col space-y-2 p-4 animate-pulse">
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <div key={i} className="h-16 bg-brand-sidebar-accent/5 rounded-2xl" />
+                            ))}
+                        </div>
+                    ) : chatsError ? (
+                        <div className="p-6 text-center">
+                            <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-3">{chatsError}</p>
+                            <button onClick={fetchChats} className="text-[10px] text-brand-accent hover:underline font-black uppercase tracking-widest">Retry Pull</button>
+                        </div>
+                    ) : chats.length > 0 ? (
+                        chats.map(chat => (
+                            <ChatListItem
+                                key={chat.id}
+                                chat={chat}
+                                currentUser={user}
+                                isActive={activeChat?.id === chat.id}
+                                userStatus={getUserStatus(chat)}
+                                typingUsers={Object.values(typingUsers[chat.id] || {})}
+                                onClick={() => navigate(`/${chat.id}`)}
+                                onContextMenu={(e) => onChatContextMenu(e, chat)}
+                            />
+                        ))
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-brand-text-dim opacity-30 select-none">
+                            <Send size={40} strokeWidth={1} className="mb-4" />
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em]">No active nodes</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
