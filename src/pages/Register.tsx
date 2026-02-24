@@ -11,7 +11,7 @@ const Register: React.FC = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [isVerifying, setIsVerifying] = useState(false);
-    const [setupData, setSetupData] = useState<{ secret: string; otp_auth_url: string } | null>(null);
+    const [setupData, setSetupData] = useState<{ secret: string; otp_auth_url: string; setup_token: string } | null>(null);
     const [otpCode, setOtpCode] = useState('');
     const navigate = useNavigate();
 
@@ -36,10 +36,7 @@ const Register: React.FC = () => {
         setLoading(true);
         try {
             await api.post('/register/confirm', {
-                username,
-                email: email || null,
-                password,
-                secret: setupData?.secret,
+                setup_token: setupData?.setup_token,
                 code: otpCode
             });
             navigate('/login');
@@ -192,7 +189,11 @@ const Register: React.FC = () => {
 
                             <button
                                 type="button"
-                                onClick={() => setIsVerifying(false)}
+                                onClick={() => {
+                                    setIsVerifying(false);
+                                    setSetupData(null);
+                                    setOtpCode('');
+                                }}
                                 className="w-full py-2 text-[9px] font-bold text-brand-text-dim hover:text-white uppercase tracking-widest transition-colors"
                             >
                                 Reallocate Identity

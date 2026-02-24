@@ -2,6 +2,19 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../api';
 import { type User } from '../types';
 
+function jwtDecode(token: string) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        return {};
+    }
+}
+
 interface AuthContextType {
     user: User | null;
     token: string | null;
@@ -20,8 +33,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         if (token) {
-            localStorage.setItem('token', token);
-            fetchUser();
+            try {
+                const decoded: any = jwtDecode(token);
+                if (decoded.exp * 1000 < Date.now()) {
+                    // Token expired
+                    throw new Error('Token expired');
+                }
+                localStorage.setItem('token', token);
+                fetchUser();
+            } catch (err) {
+                // Invalid or expired token
+                localStorage.removeItem('token');
+                setUser(null);
+                setToken(null);
+                setLoading(false);
+            }
         } else {
             localStorage.removeItem('token');
             setUser(null);

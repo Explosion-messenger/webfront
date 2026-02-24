@@ -8,7 +8,8 @@ const Login: React.FC = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [otpCode, setOtpCode] = useState('');
-    const [requires2FA, setRequires2FA] = useState(false);
+    const [preAuthToken, setPreAuthToken] = useState<string | null>(null);
+    const requires2FA = preAuthToken !== null;
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
@@ -22,9 +23,10 @@ const Login: React.FC = () => {
         setLoading(true);
         try {
             if (isPasswordless) {
-                setRequires2FA(true);
-                setLoading(false);
-                return;
+                // To do passwordless with the new backend flow, we actually need a preauth token too,
+                // or the backend needs to handle passwordless differently. 
+                // Currently backend `/login` returns `requires_2fa: true` and `access_token: preauth`.
+                // Let's just send the login request.
             }
 
             const formData = new FormData();
@@ -34,7 +36,7 @@ const Login: React.FC = () => {
             const response = await api.post('/login', formData);
 
             if (response.data.requires_2fa) {
-                setRequires2FA(true);
+                setPreAuthToken(response.data.access_token);
             } else {
                 login(response.data.access_token);
                 navigate('/');
@@ -55,6 +57,10 @@ const Login: React.FC = () => {
             const response = await api.post(endpoint, {
                 username: isPasswordless ? username : undefined,
                 code: otpCode
+            }, {
+                headers: {
+                    Authorization: `Bearer ${preAuthToken}`
+                }
             });
             login(response.data.access_token);
             navigate('/');
@@ -195,7 +201,7 @@ const Login: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => {
-                                    setRequires2FA(false);
+                                    setPreAuthToken(null);
                                     if (isPasswordless) setIsPasswordless(false);
                                 }}
                                 className="w-full py-2 text-[9px] font-bold text-brand-text-dim hover:text-white uppercase tracking-widest transition-colors"
