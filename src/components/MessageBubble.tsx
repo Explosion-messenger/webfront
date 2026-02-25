@@ -105,7 +105,7 @@ const MessageBubble: React.FC<MessageBubbleProps & { onReactionToggle?: (msgId: 
                         className="w-8 h-8 rounded-xl object-cover border border-brand-border shadow-sm"
                     />
                 ) : (
-                    <div className="w-8 h-8 bg-slate-800 rounded-xl flex items-center justify-center text-[10px] font-bold text-brand-text border border-brand-border">
+                    <div className="w-8 h-8 bg-white/60 backdrop-blur-md rounded-xl flex items-center justify-center text-[10px] font-black text-brand-text border border-white/40 shadow-sm">
                         {msg.sender.username[0].toUpperCase()}
                     </div>
                 )}
@@ -119,9 +119,9 @@ const MessageBubble: React.FC<MessageBubbleProps & { onReactionToggle?: (msgId: 
                         e.preventDefault();
                         onReadReceiptsClick?.(msg, { x: e.clientX, y: e.clientY });
                     }}
-                    className={`group relative p-4 rounded-2xl shadow-premium border transition-shadow ${isMe
-                        ? `bg-brand-accent border-brand-accent/20 text-white rounded-br-none ${isSelected ? 'ring-2 ring-white/50 ring-offset-2 ring-offset-brand-bg shadow-glow' : ''}`
-                        : 'bg-brand-card border-brand-border text-brand-text rounded-bl-none'
+                    className={`group relative p-4 rounded-2xl shadow-sm border transition-shadow ${isMe
+                        ? `bg-brand-accent border-brand-accent/20 text-white rounded-br-none ${isSelected ? 'ring-2 ring-brand-accent/50 ring-offset-2 ring-offset-brand-bg shadow-glow' : ''}`
+                        : 'bg-white/60 backdrop-blur-md border-white/60 text-brand-text rounded-bl-none'
                         }`}>
                     {!isMe && (
                         <span className="block text-[10px] uppercase tracking-widest font-bold text-brand-accent mb-1">
@@ -156,7 +156,7 @@ const MessageBubble: React.FC<MessageBubbleProps & { onReactionToggle?: (msgId: 
                     {msg.file && (
                         <div className="mt-2">
                             {msg.file.mime_type.startsWith('image/') ? (
-                                <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg bg-black/20">
+                                <div className="rounded-lg overflow-hidden border border-white/50 shadow-sm bg-white/40 backdrop-blur-sm">
                                     <img
                                         src={downloadUrl(msg.file.path)}
                                         alt={msg.file.filename}
@@ -169,7 +169,7 @@ const MessageBubble: React.FC<MessageBubbleProps & { onReactionToggle?: (msgId: 
                                     href={downloadUrl(msg.file.path)}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className={`flex items-center space-x-3 p-3 border rounded-xl transition-all text-xs ${isMe ? 'bg-white/10 border-white/10 hover:bg-white/20' : 'bg-brand-bg/50 border-brand-border hover:bg-brand-bg'
+                                    className={`flex items-center space-x-3 p-3 border rounded-xl transition-all text-xs ${isMe ? 'bg-white/10 border-white/10 hover:bg-white/20' : 'bg-white/40 border-white/50 hover:bg-white/60 backdrop-blur-sm shadow-sm'
                                         }`}
                                 >
                                     <FileIcon size={14} strokeWidth={1.5} />
@@ -221,9 +221,9 @@ const MessageBubble: React.FC<MessageBubbleProps & { onReactionToggle?: (msgId: 
                                             e.stopPropagation();
                                             onReactionToggle?.(msg.id, emoji);
                                         }}
-                                        className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors ${hasReacted
-                                            ? 'bg-brand-accent/20 border-brand-accent text-white shadow-glow-sm'
-                                            : 'bg-brand-card/50 border-brand-border text-brand-text-dim hover:border-white/20'
+                                        className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all ${hasReacted
+                                            ? 'bg-brand-accent border-brand-accent text-white shadow-glow-sm'
+                                            : 'bg-white/50 backdrop-blur-md border-white/40 text-brand-text hover:bg-white/80 shadow-sm'
                                             }`}
                                     >
                                         <span>{emoji}</span>

@@ -23,7 +23,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     onFileUpload
 }) => {
     return (
-        <div className="p-6 border-t border-brand-border bg-brand-sidebar/50 shrink-0">
+        <div className="p-6 border-t border-white/40 bg-white/40 backdrop-blur-xl shrink-0 z-20">
             <AnimatePresence>
                 {replyToMessage && (
                     <motion.div
@@ -52,7 +52,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 )}
             </AnimatePresence>
             <form onSubmit={onSendMessage} className="flex items-center space-x-4">
-                <label className="cursor-pointer p-3 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-all border border-brand-border shrink-0">
+                <label className="cursor-pointer p-3 bg-white/60 backdrop-blur-md hover:bg-white rounded-2xl transition-all border border-white/50 shadow-sm shrink-0">
                     <Paperclip size={20} strokeWidth={1.5} className="text-brand-text-dim hover:text-brand-accent" />
                     <input type="file" className="hidden" onChange={onFileUpload} />
                 </label>
@@ -61,8 +61,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
                         type="text"
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
-                        placeholder="Compose a secure message..."
-                        className="w-full bg-slate-900 border border-brand-border rounded-2xl px-6 py-4 focus:outline-none focus:border-brand-accent transition-all text-sm text-white placeholder:text-brand-text-dim/60 shadow-inner"
+                        placeholder="Type a message..."
+                        className="w-full bg-white/60 backdrop-blur-md border border-white/50 rounded-2xl px-6 py-4 focus:outline-none focus:border-brand-accent transition-all text-sm text-brand-text placeholder:text-brand-text-dim/60 shadow-sm"
                     />
                 </div>
                 <button

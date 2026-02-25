@@ -71,7 +71,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             <div className="flex items-center min-w-0">
                 <div className="relative mr-4 shrink-0">
                     {activeChat.is_group ? (
-                        <div className="w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center border border-slate-700 overflow-hidden">
+                        <div className="w-10 h-10 bg-white/60 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/50 overflow-hidden shadow-sm">
                             {activeChat.avatar_path ? (
                                 <img src={getAvatarUrl(activeChat.avatar_path)!} className="w-full h-full object-cover" />
                             ) : (
@@ -79,7 +79,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                             )}
                         </div>
                     ) : (
-                        <div className="w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center overflow-hidden border border-brand-border shadow-lg">
+                        <div className="w-10 h-10 bg-white/60 backdrop-blur-md rounded-2xl flex items-center justify-center overflow-hidden border border-white/50 shadow-sm">
                             {activeChat.members.find(m => m.id !== currentUser?.id)?.avatar_path ? (
                                 <img src={getAvatarUrl(activeChat.members.find(m => m.id !== currentUser?.id)!.avatar_path)!} className="w-full h-full object-cover" />
                             ) : (
@@ -100,7 +100,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                     )}
                 </div>
                 <div className="min-w-0">
-                    <h2 className="font-bold text-lg tracking-tight text-white truncate">{getChatName(activeChat)}</h2>
+                    <h2 className="font-bold text-lg tracking-tight text-brand-text truncate">{getChatName(activeChat)}</h2>
                     <div className="flex items-center space-x-2">
                         {typingInChat.length > 0 ? (
                             <div className="flex items-center space-x-1.5 overflow-hidden">
@@ -125,29 +125,29 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                 </div>
             </div>
             <div className="flex items-center space-x-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                <div className={`flex items-center bg-slate-900/50 rounded-xl transition-all ${isMsgSearchOpen ? 'w-64 px-3' : 'w-0 overflow-hidden'}`}>
+                <div className={`flex items-center bg-black/5 rounded-xl transition-all border border-transparent focus-within:border-black/10 focus-within:bg-white/50 ${isMsgSearchOpen ? 'w-64 px-3' : 'w-0 overflow-hidden'}`}>
                     <input
                         type="text"
                         value={msgSearchQuery}
                         onChange={(e) => setMsgSearchQuery(e.target.value)}
                         placeholder="Search messages..."
-                        className="bg-transparent border-none outline-none text-xs text-white w-full py-2"
+                        className="bg-transparent border-none outline-none text-xs text-brand-text w-full py-2 placeholder:text-brand-text-dim"
                     />
                     {isMsgSearchOpen && searchMatchIds.length > 0 && (
                         <div className="flex items-center space-x-1 shrink-0 px-2 border-l border-white/10 ml-2">
                             <span className="text-[9px] font-bold text-brand-text-dim uppercase whitespace-nowrap">
                                 {currentMatchIndex + 1}/{searchMatchIds.length}
                             </span>
-                            <button onClick={onPrevMatch} className="p-1 hover:text-white text-brand-text-dim transition-colors">
+                            <button onClick={onPrevMatch} className="p-1 hover:text-brand-text text-brand-text-dim transition-colors">
                                 <ChevronUp size={14} />
                             </button>
-                            <button onClick={onNextMatch} className="p-1 hover:text-white text-brand-text-dim transition-colors">
+                            <button onClick={onNextMatch} className="p-1 hover:text-brand-text text-brand-text-dim transition-colors">
                                 <ChevronDown size={14} />
                             </button>
                         </div>
                     )}
                     {msgSearchQuery && (
-                        <button onClick={onClearSearch} className="text-brand-text-dim hover:text-white ml-2">
+                        <button onClick={onClearSearch} className="text-brand-text-dim hover:text-brand-text ml-2">
                             <X size={12} />
                         </button>
                     )}

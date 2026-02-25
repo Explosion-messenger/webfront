@@ -27,16 +27,16 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive
     return (
         <motion.div
             layout
-            whileHover={{ backgroundColor: 'rgba(30, 41, 59, 0.4)' }}
+            whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.3)' }}
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
             onContextMenu={onContextMenu}
-            className={`p-4 flex items-center space-x-4 cursor-pointer transition-all duration-200 border-l-2 relative overflow-hidden ${isActive ? 'bg-brand-accent/10 border-brand-accent' : 'border-transparent'
+            className={`p-4 flex items-center space-x-4 cursor-pointer transition-all duration-200 border-l-4 relative overflow-hidden ${isActive ? 'bg-white/50 border-brand-accent' : 'border-transparent'
                 }`}
         >
             <div className="relative flex-shrink-0 z-10">
                 {chat.is_group ? (
-                    <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center border border-slate-700 shadow-lg overflow-hidden">
+                    <div className="w-12 h-12 bg-white/60 rounded-2xl flex items-center justify-center border border-white/40 shadow-sm overflow-hidden backdrop-blur-md">
                         {chat.avatar_path ? (
                             <img src={getAvatarUrl(chat.avatar_path)!} className="w-full h-full object-cover" />
                         ) : (
@@ -49,18 +49,18 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive
                             <img
                                 src={getAvatarUrl(otherMember.avatar_path)!}
                                 alt={otherMember.username}
-                                className="w-12 h-12 rounded-2xl object-cover border border-slate-700 shadow-glow shadow-brand-accent/5"
+                                className="w-12 h-12 rounded-2xl object-cover border border-white/50 shadow-sm"
                             />
                         ) : (
-                            <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center border border-slate-700">
+                            <div className="w-12 h-12 bg-white/60 rounded-2xl flex items-center justify-center border border-white/40 shadow-sm backdrop-blur-md">
                                 <UserIcon size={24} strokeWidth={1.5} className="text-brand-text-dim" />
                             </div>
                         )}
                         {userStatus === 'online' && (
-                            <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-brand-sidebar rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                            <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full shadow-[0_0_8px_rgba(34,197,94,0.3)]" />
                         )}
                         {userStatus === 'away' && (
-                            <div className="absolute -bottom-1.5 -right-1.5 bg-brand-sidebar rounded-full p-0.5 border-none">
+                            <div className="absolute -bottom-1.5 -right-1.5 bg-white rounded-full p-0.5 border-none shadow-sm">
                                 <Moon size={12} fill="currentColor" className="text-brand-away shadow-glow-yellow" />
                             </div>
                         )}
@@ -97,7 +97,7 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive
                             </div>
                         </div>
                     ) : chat.last_message ? (
-                        <p className={`text-xs ${chat.unread_count > 0 ? 'text-white font-bold' : 'text-brand-text-dim font-normal'} truncate leading-tight flex-1 mr-2`}>
+                        <p className={`text-xs ${chat.unread_count > 0 ? 'text-brand-text font-black' : 'text-brand-text-dim font-normal'} truncate leading-tight flex-1 mr-2`}>
                             {chat.last_message.sender_id === currentUser?.id ? <span className="text-brand-text-dim/80 font-normal">You: </span> : ''}
                             {chat.last_message.text || 'Shared a file'}
                         </p>
@@ -108,7 +108,7 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive
                             <span className="text-[9px] uppercase font-black text-brand-away tracking-widest leading-none mb-1 shadow-glow-yellow">
                                 unread
                             </span>
-                            <div className="bg-brand-away text-brand-bg text-[10px] font-black rounded-full min-w-[18px] h-[18px] px-1.5 flex items-center justify-center">
+                            <div className="bg-brand-away text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] px-1.5 flex items-center justify-center shadow-sm">
                                 {chat.unread_count > 99 ? '99+' : chat.unread_count}
                             </div>
                         </div>
@@ -117,7 +117,7 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, currentUser, isActive
             </div>
 
             {isActive && (
-                <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-brand-accent/5 to-transparent pointer-events-none" />
+                <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white/40 to-transparent pointer-events-none" />
             )}
         </motion.div>
     );

@@ -48,14 +48,14 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     };
 
     return (
-        <div className="w-80 border-r border-brand-border flex flex-col bg-brand-sidebar z-10 shrink-0">
-            <div className="p-6 border-b border-brand-border flex items-center justify-between shrink-0">
+        <div className="w-80 glass-panel flex flex-col z-10 shrink-0 overflow-hidden">
+            <div className="p-6 border-b border-brand-border/30 flex items-center justify-between shrink-0">
                 <div className="flex items-center space-x-3">
                     <div className="relative group">
                         {currentUser?.avatar_path ? (
-                            <img src={getAvatarUrl(currentUser.avatar_path)!} alt={currentUser.username} className="w-10 h-10 rounded-2xl object-cover border border-brand-border shadow-lg" />
+                            <img src={getAvatarUrl(currentUser.avatar_path)!} alt={currentUser.username} className="w-10 h-10 rounded-2xl object-cover border border-white/50 shadow-sm" />
                         ) : (
-                            <div className="w-10 h-10 bg-brand-accent rounded-2xl flex items-center justify-center font-bold text-white shadow-glow">
+                            <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-2xl flex items-center justify-center font-bold text-white shadow-glow">
                                 {currentUser?.username?.[0].toUpperCase()}
                             </div>
                         )}
@@ -66,9 +66,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         ) : (
                             <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-brand-sidebar rounded-full shadow-glow-green" />
                         )}
-                        <div className="absolute inset-0 bg-brand-bg/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all rounded-2xl scale-90 group-hover:scale-100 space-x-2">
-                            <label className="cursor-pointer p-1.5 hover:bg-brand-accent rounded-lg transition-colors">
-                                <Camera size={14} className="text-white" />
+                        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all rounded-2xl scale-90 group-hover:scale-100 space-x-2">
+                            <label className="cursor-pointer p-1.5 hover:bg-black/10 rounded-lg transition-colors">
+                                <Camera size={14} className="text-brand-text" />
                                 <input type="file" ref={avatarFileInputRef} className="hidden" accept="image/*" onChange={onSelectAvatarFile} />
                             </label>
                             {currentUser?.avatar_path && (
@@ -95,8 +95,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
             </div>
 
             <div className="p-4 shrink-0 space-y-3">
-                <button onClick={onShowNewChat} className="glow-button w-full border-none py-3 text-[10px] tracking-[0.2em] font-black uppercase">
-                    New Connection
+                <button onClick={onShowNewChat} className="glow-button w-full border border-white/40 py-3 text-[10px] tracking-[0.2em] font-black uppercase">
+                    New Instance
                 </button>
             </div>
 
@@ -104,7 +104,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 {chatsLoading ? (
                     <div className="flex flex-col space-y-2 p-4 animate-pulse">
                         {[1, 2, 3, 4, 5].map(i => (
-                            <div key={i} className="h-16 bg-brand-sidebar-accent/5 rounded-2xl" />
+                            <div key={i} className="h-16 bg-black/5 rounded-2xl" />
                         ))}
                     </div>
                 ) : chatsError ? (
@@ -126,9 +126,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         />
                     ))
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-brand-text-dim opacity-30 select-none">
+                    <div className="flex flex-col items-center justify-center h-full text-brand-text-dim opacity-50 select-none">
                         <Send size={40} strokeWidth={1} className="mb-4" />
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em]">No active nodes</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em]">No Active Instances</p>
                     </div>
                 )}
             </div>

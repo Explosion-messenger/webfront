@@ -77,16 +77,16 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-brand-dark overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center p-6 bg-brand-bg overflow-hidden">
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-brand-accent/10 blur-[120px] rounded-full animate-pulse" />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-brand-accent/5 blur-[120px] rounded-full animate-pulse delay-1000" />
+                <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-white/40 blur-[120px] rounded-full animate-pulse" />
+                <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-slate-400/20 blur-[120px] rounded-full animate-pulse delay-1000" />
             </div>
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="w-full max-w-md bg-white/5 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-white/10 shadow-premium relative z-10 space-y-8"
+                className="w-full max-w-md glass-panel p-10 relative z-10 space-y-8"
             >
                 <div className="text-center">
                     <motion.div
@@ -94,7 +94,7 @@ const Login: React.FC = () => {
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
                     >
-                        <h1 className="text-4xl font-black text-white tracking-widest uppercase mb-2">Node Access</h1>
+                        <h1 className="text-4xl font-black text-brand-text tracking-widest uppercase mb-2">Cloud Gateway</h1>
                         <p className="text-brand-accent text-[10px] font-bold tracking-[0.4em] uppercase opacity-80">Authentication Required</p>
                     </motion.div>
                 </div>
@@ -128,7 +128,7 @@ const Login: React.FC = () => {
                                     type="text"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
-                                    className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-white transition-all shadow-inner"
+                                    className="w-full px-5 py-4 bg-white/50 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-brand-text transition-all shadow-inner"
                                     required
                                     disabled={loading}
                                 />
@@ -145,7 +145,7 @@ const Login: React.FC = () => {
                                         type="password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-white transition-all shadow-inner"
+                                        className="w-full px-5 py-4 bg-white/50 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-brand-text transition-all shadow-inner"
                                         required={!isPasswordless}
                                         disabled={loading}
                                     />
@@ -164,7 +164,7 @@ const Login: React.FC = () => {
                                 onClick={() => setIsPasswordless(!isPasswordless)}
                                 className="w-full py-2 text-[9px] font-bold text-brand-text-dim hover:text-brand-accent uppercase tracking-widest transition-colors"
                             >
-                                {isPasswordless ? 'Back to Password' : 'Use 2FA Neural Bypass'}
+                                {isPasswordless ? 'Back to Password' : 'Use Cloud OTP Auth'}
                             </button>
                         </motion.form>
                     ) : (
@@ -188,7 +188,7 @@ const Login: React.FC = () => {
                                     type="text"
                                     value={otpCode}
                                     onChange={(e) => setOtpCode(e.target.value)}
-                                    className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-center text-2xl font-black text-brand-accent tracking-[0.5em] transition-all shadow-inner"
+                                    className="w-full px-5 py-4 bg-white/50 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-center text-2xl font-black text-brand-accent tracking-[0.5em] transition-all shadow-inner"
                                     placeholder="000 000"
                                     maxLength={6}
                                     required
@@ -218,9 +218,9 @@ const Login: React.FC = () => {
                 </AnimatePresence>
 
                 <p className="text-center text-brand-text-dim text-[10px] font-bold uppercase tracking-widest pt-4">
-                    New entity?{' '}
-                    <Link to="/register" className="text-brand-accent hover:text-white transition-colors ml-2 underline underline-offset-4">
-                        Register Node
+                    New user?{' '}
+                    <Link to="/register" className="text-brand-accent hover:opacity-70 transition-opacity ml-2 underline underline-offset-4">
+                        Provision Instance
                     </Link>
                 </p>
             </motion.div>

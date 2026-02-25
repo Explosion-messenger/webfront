@@ -55,7 +55,7 @@ const Register: React.FC = () => {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="w-full max-w-md p-10 space-y-8 premium-card z-10"
+                className="w-full max-w-md p-10 space-y-8 glass-panel z-10"
             >
                 <div className="text-center">
                     <motion.div
@@ -63,9 +63,9 @@ const Register: React.FC = () => {
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
                     >
-                        <h1 className="text-4xl font-black text-white tracking-widest uppercase mb-2">Join Node</h1>
+                        <h1 className="text-4xl font-black text-brand-text tracking-widest uppercase mb-2">Provision Node</h1>
                         <p className="text-brand-accent text-[10px] font-bold tracking-[0.4em] uppercase opacity-80">
-                            {isVerifying ? 'Activate Secure Link' : 'Allocate Identity'}
+                            {isVerifying ? 'Activate Secure Link' : 'Allocate Instance'}
                         </p>
                     </motion.div>
                 </div>
@@ -99,7 +99,7 @@ const Register: React.FC = () => {
                                     type="text"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
-                                    className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-white transition-all shadow-inner"
+                                    className="w-full px-5 py-4 bg-white/50 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-brand-text transition-all shadow-inner"
                                     required
                                     disabled={loading}
                                 />
@@ -110,7 +110,7 @@ const Register: React.FC = () => {
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-white transition-all shadow-inner"
+                                    className="w-full px-5 py-4 bg-white/50 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-brand-text transition-all shadow-inner"
                                     disabled={loading}
                                 />
                             </div>
@@ -120,7 +120,7 @@ const Register: React.FC = () => {
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-white transition-all shadow-inner"
+                                    className="w-full px-5 py-4 bg-white/50 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-brand-text transition-all shadow-inner"
                                     required
                                     minLength={6}
                                     disabled={loading}
@@ -132,7 +132,7 @@ const Register: React.FC = () => {
                                 disabled={loading}
                                 className="glow-button w-full border-none py-4 text-xs font-black uppercase tracking-[0.35em] mt-4 shadow-[0_0_20px_rgba(34,197,94,0.2)] bg-brand-accent disabled:opacity-50"
                             >
-                                {loading ? 'Processing...' : 'Generate Node Secret'}
+                                {loading ? 'Processing...' : 'Generate Instance Code'}
                             </button>
                         </motion.form>
                     ) : (
@@ -146,7 +146,7 @@ const Register: React.FC = () => {
                         >
                             <div className="text-center space-y-4">
                                 <p className="text-[10px] font-bold text-brand-text-dim uppercase tracking-widest leading-relaxed">
-                                    Identity reserved. <br />
+                                    Instance reserved. <br />
                                     Scan to link your authenticator.
                                 </p>
 
@@ -157,8 +157,8 @@ const Register: React.FC = () => {
                                 )}
 
                                 <div className="space-y-1">
-                                    <p className="text-[9px] font-black text-brand-text-dim uppercase tracking-widest">Manual Node Key</p>
-                                    <code className="block bg-slate-900/50 p-2 rounded-lg text-brand-accent text-xs font-mono select-all uppercase">
+                                    <p className="text-[9px] font-black text-brand-text-dim uppercase tracking-widest">Manual Setup Key</p>
+                                    <code className="block bg-white/50 border border-brand-border p-2 rounded-lg text-brand-text text-xs font-mono select-all uppercase">
                                         {setupData?.secret}
                                     </code>
                                 </div>
@@ -170,7 +170,7 @@ const Register: React.FC = () => {
                                     type="text"
                                     value={otpCode}
                                     onChange={(e) => setOtpCode(e.target.value)}
-                                    className="w-full px-5 py-4 bg-slate-900 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-center text-2xl font-black text-brand-accent tracking-[0.5em] transition-all shadow-inner"
+                                    className="w-full px-5 py-4 bg-white/50 border border-brand-border rounded-2xl focus:outline-none focus:border-brand-accent text-center text-2xl font-black text-brand-accent tracking-[0.5em] transition-all shadow-inner"
                                     placeholder="000 000"
                                     maxLength={6}
                                     required
@@ -204,8 +204,8 @@ const Register: React.FC = () => {
 
                 <p className="text-center text-brand-text-dim text-[10px] font-bold uppercase tracking-widest pt-4">
                     Already specialized?{' '}
-                    <Link to="/login" className="text-brand-accent hover:text-white transition-colors ml-2 underline underline-offset-4">
-                        Login Identity
+                    <Link to="/login" className="text-brand-accent hover:opacity-70 transition-opacity ml-2 underline underline-offset-4">
+                        Login to Instance
                     </Link>
                 </p>
             </motion.div>

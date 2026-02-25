@@ -710,7 +710,7 @@ const ChatPage: React.FC = () => {
     };
 
     return (
-        <div className="flex h-full w-full bg-brand-bg text-brand-text overflow-hidden font-sans relative">
+        <div className="flex h-full w-full bg-brand-bg text-brand-text overflow-hidden font-sans relative p-4 gap-4">
             <div className="radar-glow" />
 
             {/* Sidebar */}
@@ -733,7 +733,7 @@ const ChatPage: React.FC = () => {
             />
 
             {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col relative z-10 bg-brand-bg/30 min-w-0">
+            <div className="flex-1 flex flex-col relative z-10 glass-panel overflow-hidden min-w-0">
                 <AnimatePresence mode="wait">
                     {activeChat ? (
                         <div key={activeChat.id} className="flex-1 flex flex-col min-h-0">
@@ -773,7 +773,7 @@ const ChatPage: React.FC = () => {
                                                 <React.Fragment key={msg.id}>
                                                     {showDate && (
                                                         <div className="flex justify-center my-8 first:mt-2">
-                                                            <div className="px-5 py-1.5 rounded-full bg-brand-sidebar/50 border border-brand-border text-[10px] font-black text-brand-text-dim uppercase tracking-[0.2em] shadow-lg backdrop-blur-md">
+                                                            <div className="px-5 py-1.5 rounded-full bg-white/60 border border-white/50 text-[10px] font-black text-brand-text-dim uppercase tracking-[0.2em] shadow-sm backdrop-blur-md">
                                                                 {format(new Date(msg.created_at), 'd MMMM, yyyy')}
                                                             </div>
                                                         </div>

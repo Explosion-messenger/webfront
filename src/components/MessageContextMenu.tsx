@@ -59,10 +59,10 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({ message, chat, 
                 top: adjustedY,
                 position: 'fixed'
             }}
-            className="w-64 bg-brand-card/95 backdrop-blur-2xl border border-brand-border rounded-2xl shadow-3xl z-[70] overflow-hidden flex flex-col"
+            className="w-64 bg-white/60 backdrop-blur-xl border border-white/50 rounded-2xl shadow-premium z-[70] overflow-hidden flex flex-col"
         >
             {/* Reactions Picker */}
-            <div className="p-3 border-b border-brand-border bg-brand-sidebar/30">
+            <div className="p-3 border-b border-white/40 bg-white/40">
                 <div className="flex flex-wrap gap-2 justify-between">
                     {EMOJIS.map(emoji => {
                         const isSelected = message.reactions?.some(r => r.emoji === emoji && r.user_id === currentUserId);
@@ -84,7 +84,7 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({ message, chat, 
                 </div>
             </div>
             {/* Actions */}
-            <div className="p-1 border-b border-brand-border flex items-center bg-brand-sidebar/40">
+            <div className="p-1 border-b border-white/40 flex items-center bg-white/40">
                 <button
                     onClick={() => {
                         onReply(message);
@@ -93,14 +93,14 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({ message, chat, 
                     className="flex-1 flex items-center justify-center space-x-2 py-2.5 hover:bg-brand-accent/20 transition-all group"
                 >
                     <Reply size={16} className="text-brand-accent group-hover:scale-110 transition-transform" />
-                    <span className="text-[11px] font-black uppercase tracking-wider text-white">Reply</span>
+                    <span className="text-[11px] font-black uppercase tracking-wider text-brand-text">Reply</span>
                 </button>
             </div>
 
             {/* Read Status Header */}
-            <div className="p-3 border-b border-brand-border flex items-center space-x-2 bg-brand-sidebar/50">
+            <div className="p-3 border-b border-white/40 flex items-center space-x-2 bg-white/50">
                 <CheckCheck size={14} className="text-brand-accent" />
-                <h3 className="text-[10px] uppercase tracking-[0.2em] font-black text-white/70">
+                <h3 className="text-[10px] uppercase tracking-[0.2em] font-black text-brand-text">
                     {chat.is_group ? 'Read Audit' : 'Message Info'}
                 </h3>
             </div>
@@ -112,14 +112,14 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({ message, chat, 
                             <div key={idx} className="flex items-center justify-between p-2 hover:bg-white/5 rounded-xl transition-colors group">
                                 <div className="flex items-center space-x-3 overflow-hidden">
                                     {r.user?.avatar_path ? (
-                                        <img src={getAvatarUrl(r.user.avatar_path)!} className="w-6 h-6 rounded-lg object-cover border border-white/5 shrink-0" />
+                                        <img src={getAvatarUrl(r.user.avatar_path)!} className="w-6 h-6 rounded-lg object-cover border border-white/40 shadow-sm shrink-0" />
                                     ) : (
-                                        <div className="w-6 h-6 bg-slate-800 rounded-lg flex items-center justify-center shrink-0">
+                                        <div className="w-6 h-6 bg-white/60 backdrop-blur-md border border-white/40 shadow-sm rounded-lg flex items-center justify-center shrink-0">
                                             <UserIcon size={10} className="text-brand-text-dim" />
                                         </div>
                                     )}
                                     <div className="flex items-center space-x-2 overflow-hidden">
-                                        <span className="text-[11px] font-bold text-white/90 truncate">{r.user?.username}</span>
+                                        <span className="text-[11px] font-black text-brand-text truncate">{r.user?.username}</span>
                                         {r.reactions.length > 0 && (
                                             <div className="flex -space-x-1">
                                                 {r.reactions.map((re, ridx) => (
@@ -145,7 +145,7 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({ message, chat, 
                     <div className="p-2 space-y-3">
                         <div className="flex justify-between items-center">
                             <span className="text-[10px] uppercase font-bold text-brand-text-dim">Sent</span>
-                            <span className="text-[10px] font-medium text-white/70">{format(new Date(message.created_at), 'HH:mm, MMM d')}</span>
+                            <span className="text-[10px] font-medium text-brand-text">{format(new Date(message.created_at), 'HH:mm, MMM d')}</span>
                         </div>
                         {readers.length > 0 && (
                             <div className="flex justify-between items-center">

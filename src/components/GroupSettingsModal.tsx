@@ -133,34 +133,34 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-brand-bg/95 backdrop-blur-2xl z-50 flex items-center justify-center p-6"
+            className="absolute inset-0 bg-black/20 backdrop-blur-2xl z-50 flex items-center justify-center p-6"
         >
             <motion.div
                 initial={{ scale: 0.95, y: 10 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.95, y: 10 }}
                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                className="bg-brand-card w-full max-w-2xl rounded-[2.5rem] border border-brand-border shadow-3xl overflow-hidden flex flex-col max-h-[90vh]"
+                className="bg-white/60 backdrop-blur-xl w-full max-w-2xl rounded-[2.5rem] border border-white/50 shadow-premium overflow-hidden flex flex-col max-h-[90vh]"
             >
-                <div className="p-8 border-b border-brand-border flex justify-between items-center bg-brand-sidebar/50 shrink-0">
-                    <h3 className="text-sm uppercase tracking-[0.25em] font-black text-white">Group Intelligence</h3>
-                    <button onClick={onClose} className="text-brand-text-dim hover:text-white transition-colors">
+                <div className="p-8 border-b border-white/40 flex justify-between items-center bg-white/40 shrink-0">
+                    <h3 className="text-sm uppercase tracking-[0.25em] font-black text-brand-text">Cluster Configuration</h3>
+                    <button onClick={onClose} className="text-brand-text-dim hover:text-brand-text transition-colors">
                         <X size={24} strokeWidth={2} />
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scroll p-10 bg-brand-bg/20 space-y-10">
+                <div className="flex-1 overflow-y-auto custom-scroll p-10 bg-transparent space-y-10">
                     {/* Header Info */}
                     <div className="flex flex-col items-center space-y-6">
                         <div className="relative group">
-                            <div className="w-32 h-32 bg-slate-800 rounded-[2.5rem] flex items-center justify-center overflow-hidden border-2 border-brand-border shadow-2xl relative">
+                            <div className="w-32 h-32 bg-white/60 backdrop-blur-md rounded-[2.5rem] flex items-center justify-center overflow-hidden border border-white/50 shadow-premium relative">
                                 {chat.avatar_path ? (
                                     <img src={getAvatarUrl(chat.avatar_path)!} className="w-full h-full object-cover" alt="Group Avatar" />
                                 ) : (
                                     <UserIcon size={48} className="text-brand-text-dim" />
                                 )}
                                 {isAdmin && (
-                                    <div className="absolute inset-0 bg-brand-bg/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
                                         <label className="cursor-pointer p-3 bg-brand-accent rounded-2xl hover:scale-110 transition-transform shadow-glow">
                                             <Camera size={24} className="text-white" />
                                             <input type="file" ref={avatarEditor.fileInputRef} className="hidden" accept="image/*" onChange={avatarEditor.onSelectFile} />
@@ -179,9 +179,9 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    placeholder="GROUP NAME"
+                                    placeholder="CLUSTER DESIGNATION"
                                     disabled={!isAdmin}
-                                    className={`w-full bg-slate-900/50 border border-brand-border rounded-2xl px-6 py-4 focus:outline-none focus:border-brand-accent text-sm tracking-widest uppercase font-bold text-white text-center ${!isAdmin && 'opacity-70 cursor-not-allowed'}`}
+                                    className={`w-full bg-white/60 backdrop-blur-md border border-white/50 rounded-2xl px-6 py-4 focus:outline-none focus:border-brand-accent text-sm tracking-widest uppercase font-black text-brand-text text-center placeholder:text-brand-text-dim shadow-sm ${!isAdmin && 'opacity-70 cursor-not-allowed'}`}
                                 />
                                 {name !== chat.name && (
                                     <button
@@ -205,13 +205,13 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                             </div>
                             <div className="space-y-3">
                                 {chat.members.map(member => (
-                                    <div key={member.id} className="p-4 premium-card flex items-center justify-between group">
+                                    <div key={member.id} className="p-4 bg-white/40 border border-white/50 shadow-sm rounded-2xl flex items-center justify-between group">
                                         <div className="flex items-center space-x-4">
                                             <div className="relative">
                                                 {member.avatar_path ? (
-                                                    <img src={getAvatarUrl(member.avatar_path)!} className="w-8 h-8 rounded-lg object-cover border border-brand-border" />
+                                                    <img src={getAvatarUrl(member.avatar_path)!} className="w-8 h-8 rounded-lg object-cover border border-white/40 shadow-sm" />
                                                 ) : (
-                                                    <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
+                                                    <div className="w-8 h-8 bg-white/60 backdrop-blur-md shadow-sm border border-white/40 rounded-lg flex items-center justify-center">
                                                         <UserIcon size={14} className="text-brand-text-dim" />
                                                     </div>
                                                 )}
@@ -224,14 +224,14 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                                                     </div>
                                                 )}
                                             </div>
-                                            <span className="text-sm font-bold text-white uppercase tracking-wider">{member.username}</span>
+                                            <span className="text-sm font-black text-brand-text uppercase tracking-wider">{member.username}</span>
                                             {member.is_chat_owner ? (
                                                 <span className="text-[8px] bg-brand-accent/20 text-brand-accent px-1.5 py-0.5 rounded uppercase font-black tracking-tighter shadow-glow-green border border-brand-accent/30">Owner</span>
                                             ) : member.is_chat_admin ? (
-                                                <span className="text-[8px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded uppercase font-black border border-slate-600">Admin</span>
+                                                <span className="text-[8px] bg-white/60 text-brand-text-dim px-1.5 py-0.5 rounded uppercase font-black border border-white/50 shadow-sm">Admin</span>
                                             ) : null}
                                             {member.id === currentUser?.id && (
-                                                <span className="text-[8px] bg-slate-800/80 text-brand-text-dim px-1.5 py-0.5 rounded uppercase font-black border border-brand-border/30">You</span>
+                                                <span className="text-[8px] bg-white/80 text-brand-text px-1.5 py-0.5 rounded uppercase font-black border border-white/50 shadow-sm">You</span>
                                             )}
                                         </div>
                                         <div className="flex items-center space-x-1">
@@ -268,7 +268,7 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                                     value={searchQuery}
                                     onChange={(e) => handleSearch(e.target.value)}
                                     placeholder="SCAN DATABASE..."
-                                    className="w-full bg-slate-900 border border-brand-border rounded-2xl pl-12 pr-6 py-4 focus:outline-none focus:border-brand-accent text-xs tracking-[.4em] uppercase font-black placeholder:text-brand-text-dim/30"
+                                    className="w-full bg-white/60 backdrop-blur-md border border-white/50 text-brand-text rounded-2xl pl-12 pr-6 py-4 focus:outline-none focus:border-brand-accent text-xs tracking-[.4em] uppercase font-black placeholder:text-brand-text-dim/60 shadow-sm"
                                 />
                             </div>
 
@@ -282,18 +282,18 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                                         {searchResults.map(u => (
                                             <div
                                                 key={u.id}
-                                                className="p-4 premium-card flex items-center justify-between hover:border-brand-accent cursor-pointer group"
+                                                className="p-4 bg-white/40 border border-white/50 shadow-sm rounded-2xl flex items-center justify-between hover:border-brand-accent cursor-pointer group"
                                                 onClick={() => handleAddMember(u.id)}
                                             >
                                                 <div className="flex items-center space-x-4">
                                                     {u.avatar_path ? (
-                                                        <img src={getAvatarUrl(u.avatar_path)!} className="w-8 h-8 rounded-lg object-cover border border-brand-border" />
+                                                        <img src={getAvatarUrl(u.avatar_path)!} className="w-8 h-8 rounded-lg object-cover border border-white/40 shadow-sm" />
                                                     ) : (
-                                                        <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
+                                                        <div className="w-8 h-8 bg-white/60 backdrop-blur-md border border-white/40 shadow-sm rounded-lg flex items-center justify-center">
                                                             <UserIcon size={14} className="text-brand-text-dim" />
                                                         </div>
                                                     )}
-                                                    <span className="text-sm font-bold text-white uppercase tracking-wider">{u.username}</span>
+                                                    <span className="text-sm font-black text-brand-text uppercase tracking-wider">{u.username}</span>
                                                 </div>
                                                 <Plus size={18} className="text-brand-accent" />
                                             </div>
@@ -305,21 +305,21 @@ const GroupSettingsModal: React.FC<GroupSettingsModalProps> = ({ chat, onClose, 
                     </div>
                 </div>
 
-                <div className="p-8 bg-brand-sidebar/50 border-t border-brand-border flex items-center justify-between shrink-0">
+                <div className="p-8 bg-white/40 border-t border-white/50 flex items-center justify-between shrink-0">
                     {isOwner ? (
                         <button
                             onClick={handleDeleteChat}
                             className="px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-red-500 hover:bg-red-500/10 rounded-xl transition-all flex items-center space-x-2"
                         >
                             <Trash2 size={16} />
-                            <span>Purge Group</span>
+                            <span>Purge Cluster</span>
                         </button>
                     ) : (
                         <div />
                     )}
                     <button
                         onClick={() => handleRemoveMember(currentUser?.id || 0)}
-                        className="px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-brand-text-dim hover:text-white rounded-xl transition-all flex items-center space-x-2"
+                        className="px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-brand-text-dim hover:text-brand-text rounded-xl transition-all flex items-center space-x-2"
                     >
                         <LogOut size={16} />
                         <span>Sever Link</span>

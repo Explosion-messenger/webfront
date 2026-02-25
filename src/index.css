@@ -1,23 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-  /* Premium Dark Palette (Inspired by Google AI interface) */
-  --color-brand-bg: #000103;
-  --color-brand-card: #080A0F;
-  --color-brand-sidebar: #050608;
-  --color-brand-accent: #1A73E8;
-  --color-brand-border: #1E293B;
-  --color-brand-text: #F8FAFC;
-  --color-brand-text-dim: #94A3B8;
-  --color-brand-away: #FFD700;
+  /* Achromatic Palette for Cloud & Glass Aesthetic */
+  --color-brand-bg: #EAECEF;
+  /* Light clean grey/white for background */
+  --color-brand-card: rgba(255, 255, 255, 0.6);
+  --color-brand-sidebar: rgba(255, 255, 255, 0.4);
+  --color-brand-accent: #202124;
+  /* Google Sans almost-black */
+  --color-brand-border: rgba(255, 255, 255, 0.8);
+  --color-brand-text: #202124;
+  --color-brand-text-dim: #5F6368;
+  --color-brand-away: #FABB05;
+  /* Kept generic gold/yellow for away */
 
-  /* Shared Shadows */
-  --shadow-premium: 0 0 20px rgba(0, 0, 0, 0.5), 0 0 40px rgba(26, 115, 232, 0.05);
-  --shadow-glow: 0 0 15px rgba(26, 115, 232, 0.4);
-  --shadow-glow-hover: 0 0 25px rgba(26, 115, 232, 0.6);
-  --shadow-glow-green: 0 0 15px rgba(34, 197, 94, 0.4);
-  --shadow-glow-yellow: 0 0 15px rgba(255, 215, 0, 0.4);
-  --shadow-3xl: 0 35px 60px -15px rgba(0, 0, 0, 0.5);
+  /* Soft Glass Shadows */
+  --shadow-premium: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --shadow-glow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  --shadow-glow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
+  --shadow-glow-green: 0 0 15px rgba(52, 168, 83, 0.4);
+  --shadow-glow-yellow: 0 0 15px rgba(250, 187, 5, 0.4);
+  --shadow-3xl: 0 35px 60px -15px rgba(0, 0, 0, 0.1);
 }
 
 @layer base {
@@ -29,38 +32,52 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    /* Lock the layout! */
   }
 
   body {
     @apply bg-brand-bg text-brand-text;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     letter-spacing: -0.01em;
+    /* Soft cloud-like gradient background */
+    background: linear-gradient(135deg, #f6f8fa 0%, #e9ecef 100%);
   }
 }
 
 @layer components {
-  .glass-header {
-    @apply backdrop-blur-xl bg-brand-sidebar/80 border-b border-brand-border;
-  }
 
-  .premium-card {
-    border: 1px solid var(--color-brand-border);
-    background-color: var(--color-brand-card);
+  /* Core Glassmorphism Utilities */
+  .glass-panel {
+    @apply backdrop-blur-2xl bg-white/40 border border-white/60 shadow-premium;
     border-radius: 1.5rem;
-    box-shadow: var(--shadow-premium);
   }
 
+  /* Variant for tighter spaces like headers */
+  .glass-header {
+    @apply backdrop-blur-xl bg-white/50 border-b border-white/40;
+  }
+
+  /* Overriding old premium-card to match glass-panel */
+  .premium-card {
+    @apply backdrop-blur-2xl bg-white/40 border border-white/60 shadow-premium;
+    border-radius: 1.5rem;
+  }
+
+  /* Sleek, flat but slightly glowing buttons */
   .glow-button {
-    @apply bg-brand-accent text-white px-6 py-2 rounded-full font-semibold transition-transform active:scale-95;
+    @apply bg-brand-accent text-white px-6 py-2 rounded-full font-medium transition-all active:scale-95;
     box-shadow: var(--shadow-glow);
+  }
+
+  .glow-button:hover {
+    box-shadow: var(--shadow-glow-hover);
+    transform: translateY(-1px);
   }
 }
 
-/* Custom scrollbar */
+/* Custom minimal scrollbar */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -68,26 +85,42 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 10px;
 }
 
-/* Radar Glow - Fixed to background to prevent layout shifts */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Ambient Cloud Background Mesh */
 .radar-glow {
   position: fixed;
   top: 50%;
   left: 50%;
-  width: 150vmax;
-  height: 150vmax;
-  background: radial-gradient(circle at center, rgba(26, 115, 232, 0.08) 0%, transparent 60%);
+  width: 200vmax;
+  height: 200vmax;
+  background: radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.8) 0%, transparent 40%),
+    radial-gradient(ellipse at bottom right, rgba(200, 205, 210, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at center, rgba(240, 242, 245, 0.8) 0%, transparent 60%);
   transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 0;
+  animation: ambientShift 30s ease-in-out infinite alternate;
+}
+
+@keyframes ambientShift {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) scale(1);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) rotate(5deg) scale(1.05);
+  }
 }
 
 .custom-scroll {
   scrollbar-gutter: stable;
-  /* Prevent horizontal jump when scrollbar appears */
 }
 
 @keyframes dot-pulse {
