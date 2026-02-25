@@ -49,6 +49,7 @@ const ChatPage: React.FC = () => {
     const [activeBigReaction, setActiveBigReaction] = useState<{ emoji: string, timestamp: number } | null>(null);
     const [unreadBottomCount, setUnreadBottomCount] = useState(0);
     const isAtBottomRef = useRef(true);
+    const [showScrollButton, setShowScrollButton] = useState(false);
     const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
 
     // Chat Actions Context Menu
@@ -151,25 +152,37 @@ const ChatPage: React.FC = () => {
     }, [activeChat?.id]);
 
     useEffect(() => {
-        if (messagesLoading || !messages.length || !isInitialLoadRef.current) return;
+        if (messagesLoading || !messages.length) return;
 
-        const firstUnread = messages.find(m =>
-            m.sender_id !== user?.id &&
-            !m.read_by.some(r => r.user_id === user?.id)
-        );
+        if (isInitialLoadRef.current) {
+            const firstUnread = messages.find(m =>
+                m.sender_id !== user?.id &&
+                !m.read_by.some(r => r.user_id === user?.id)
+            );
 
-        if (firstUnread) {
-            const el = document.getElementById(`msg-${firstUnread.id}`);
-            if (el) {
-                el.scrollIntoView({ behavior: 'auto', block: 'start' });
+            if (firstUnread) {
+                const el = document.getElementById(`msg-${firstUnread.id}`);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'auto', block: 'start' });
+                } else {
+                    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+                }
             } else {
                 messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
             }
-        } else {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+            isInitialLoadRef.current = false;
+        } else if (messages.length > lastMessagesLengthRef.current) {
+            // New message logic
+            const lastMsg = messages[messages.length - 1];
+            const isMyMsg = lastMsg?.sender_id === user?.id;
+
+            if (isAtBottomRef.current || isMyMsg) {
+                setTimeout(() => {
+                    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            }
         }
 
-        isInitialLoadRef.current = false;
         lastMessagesLengthRef.current = messages.length;
     }, [messages, messagesLoading, user?.id]);
 
@@ -178,11 +191,12 @@ const ChatPage: React.FC = () => {
         if (!container) return;
 
         const handleScroll = () => {
-            const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+            const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
             isAtBottomRef.current = isAtBottom;
+            setShowScrollButton(!isAtBottom);
+
             if (isAtBottom) {
                 setUnreadBottomCount(0);
-                // Mark all current messages as read when hitting bottom
                 if (messages.some(m => m.sender_id !== user?.id && !m.read_by.some(r => r.user_id === user?.id))) {
                     markChatRead();
                 }
@@ -190,6 +204,8 @@ const ChatPage: React.FC = () => {
         };
 
         container.addEventListener('scroll', handleScroll);
+        // Initial check
+        handleScroll();
         return () => container.removeEventListener('scroll', handleScroll);
     }, [messages, user?.id]);
 
@@ -794,7 +810,7 @@ const ChatPage: React.FC = () => {
 
                             {/* Scroll to bottom button */}
                             <AnimatePresence>
-                                {unreadBottomCount > 0 && (
+                                {showScrollButton && (
                                     <motion.button
                                         initial={{ opacity: 0, y: 20, scale: 0.8 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -804,9 +820,11 @@ const ChatPage: React.FC = () => {
                                     >
                                         <div className="relative">
                                             <ChevronDown size={24} className="group-hover:translate-y-0.5 transition-transform" />
-                                            <span className="absolute -top-4 -right-4 bg-red-500 text-[10px] font-black w-6 h-6 rounded-full border-2 border-brand-bg flex items-center justify-center shadow-lg">
-                                                {unreadBottomCount > 99 ? '99+' : unreadBottomCount}
-                                            </span>
+                                            {unreadBottomCount > 0 && (
+                                                <span className="absolute -top-4 -right-4 bg-red-500 text-[10px] font-black w-6 h-6 rounded-full border-2 border-brand-bg flex items-center justify-center shadow-lg">
+                                                    {unreadBottomCount > 99 ? '99+' : unreadBottomCount}
+                                                </span>
+                                            )}
                                         </div>
                                         <span className="text-[10px] uppercase font-black tracking-widest pr-2 hidden group-hover:block">Scroll to latest</span>
                                     </motion.button>
