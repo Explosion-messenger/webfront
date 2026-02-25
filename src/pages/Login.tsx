@@ -23,23 +23,28 @@ const Login: React.FC = () => {
         setLoading(true);
         try {
             if (isPasswordless) {
-                // To do passwordless with the new backend flow, we actually need a preauth token too,
-                // or the backend needs to handle passwordless differently. 
-                // Currently backend `/login` returns `requires_2fa: true` and `access_token: preauth`.
-                // Let's just send the login request.
-            }
-
-            const formData = new FormData();
-            formData.append('username', username);
-            formData.append('password', password);
-
-            const response = await api.post('/login', formData);
-
-            if (response.data.requires_2fa) {
-                setPreAuthToken(response.data.access_token);
+                // Trigger Neural Bypass using the raw username as OTP step
+                const resp = await api.post('/login/passwordless', { username });
+                if (resp.data.requires_2fa) {
+                    setPreAuthToken(resp.data.access_token);
+                } else {
+                    login(resp.data.access_token);
+                    navigate('/');
+                }
             } else {
-                login(response.data.access_token);
-                navigate('/');
+                // Normal Login
+                const formData = new URLSearchParams();
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const resp = await api.post('/login', formData);
+
+                if (resp.data.requires_2fa) {
+                    setPreAuthToken(resp.data.access_token);
+                } else {
+                    login(resp.data.access_token);
+                    navigate('/');
+                }
             }
         } catch (err: any) {
             setError(err.response?.data?.detail || 'Login failed');
