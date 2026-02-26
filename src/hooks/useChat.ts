@@ -4,50 +4,29 @@ import { type Message, type Chat } from '../types';
 
 export function useWebSocket(
     token: string | null,
-    onNewMessage: (msg: Message) => void,
-    onDeleteMessage: (messageId: number, chatId: number) => void,
-    onNewChat: (chat: Chat) => void,
-    onChatUpdated: (data: any) => void,
-    onOnlineList: (data: Record<number, string>) => void,
-    onUserStatus: (userId: number, status: string) => void,
-    onMessageRead: (data: { message_id: number, chat_id: number, user_id: number, read_at: string }) => void,
-    onTyping: (data: { chat_id: number, user_id: number, username: string, is_typing: boolean }) => void,
-    onChatDeleted: (chatId: number) => void,
-    onUserUpdated: (data: { id: number, username: string, avatar_path: string | null }) => void,
-    onMessageReaction: (data: { message_id: number, chat_id: number, user_id: number, emoji: string, action: 'added' | 'removed' }) => void,
+    handlers: {
+        onNewMessage: (msg: Message) => void;
+        onDeleteMessage: (messageId: number, chatId: number) => void;
+        onNewChat: (chat: Chat) => void;
+        onChatUpdated: (data: any) => void;
+        onOnlineList: (data: Record<number, string>) => void;
+        onUserStatus: (userId: number, status: string) => void;
+        onMessageRead: (data: { message_id: number, chat_id: number, user_id: number, read_at: string }) => void;
+        onTyping: (data: { chat_id: number, user_id: number, username: string, is_typing: boolean }) => void;
+        onChatDeleted: (chatId: number) => void;
+        onUserUpdated: (data: { id: number, username: string, avatar_path: string | null }) => void;
+        onMessageReaction: (data: { message_id: number, chat_id: number, user_id: number, emoji: string, action: 'added' | 'removed' }) => void;
+    }
 ) {
     const ws = useRef<WebSocket | null>(null);
     const reconnectAttempt = useRef(0);
     const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isMounted = useRef(true);
+    const handlersRef = useRef(handlers);
 
-    // Store callbacks in refs to avoid stale closures
-    const onNewMessageRef = useRef(onNewMessage);
-    const onDeleteMessageRef = useRef(onDeleteMessage);
-    const onNewChatRef = useRef(onNewChat);
-    const onChatUpdatedRef = useRef(onChatUpdated);
-    const onOnlineListRef = useRef(onOnlineList);
-    const onUserStatusRef = useRef(onUserStatus);
-    const onMessageReadRef = useRef(onMessageRead);
-    const onTypingRef = useRef(onTyping);
-    const onChatDeletedRef = useRef(onChatDeleted);
-    const onUserUpdatedRef = useRef(onUserUpdated);
-    const onMessageReactionRef = useRef(onMessageReaction);
-
-    // Keep refs up to date on every render
     useEffect(() => {
-        onNewMessageRef.current = onNewMessage;
-        onDeleteMessageRef.current = onDeleteMessage;
-        onNewChatRef.current = onNewChat;
-        onChatUpdatedRef.current = onChatUpdated;
-        onOnlineListRef.current = onOnlineList;
-        onUserStatusRef.current = onUserStatus;
-        onMessageReadRef.current = onMessageRead;
-        onTypingRef.current = onTyping;
-        onChatDeletedRef.current = onChatDeleted;
-        onUserUpdatedRef.current = onUserUpdated;
-        onMessageReactionRef.current = onMessageReaction;
-    }, [onNewMessage, onDeleteMessage, onNewChat, onChatUpdated, onOnlineList, onUserStatus, onMessageRead, onTyping, onChatDeleted, onUserUpdated, onMessageReaction]);
+        handlersRef.current = handlers;
+    }, [handlers]);
 
     useEffect(() => {
         isMounted.current = true;
@@ -68,27 +47,27 @@ export function useWebSocket(
                 try {
                     const data = JSON.parse(event.data);
                     if (data.type === 'new_message') {
-                        onNewMessageRef.current(data.data);
+                        handlersRef.current.onNewMessage(data.data);
                     } else if (data.type === 'delete_message') {
-                        onDeleteMessageRef.current(data.data.message_id, data.data.chat_id);
+                        handlersRef.current.onDeleteMessage(data.data.message_id, data.data.chat_id);
                     } else if (data.type === 'new_chat') {
-                        onNewChatRef.current(data.data);
+                        handlersRef.current.onNewChat(data.data);
                     } else if (data.type === 'chat_updated') {
-                        onChatUpdatedRef.current(data.data);
+                        handlersRef.current.onChatUpdated(data.data);
                     } else if (data.type === 'online_list') {
-                        onOnlineListRef.current(data.data);
+                        handlersRef.current.onOnlineList(data.data);
                     } else if (data.type === 'user_status') {
-                        onUserStatusRef.current(data.data.user_id, data.data.status);
+                        handlersRef.current.onUserStatus(data.data.user_id, data.data.status);
                     } else if (data.type === 'message_read') {
-                        onMessageReadRef.current(data.data);
+                        handlersRef.current.onMessageRead(data.data);
                     } else if (data.type === 'typing') {
-                        onTypingRef.current(data.data);
+                        handlersRef.current.onTyping(data.data);
                     } else if (data.type === 'chat_deleted') {
-                        onChatDeletedRef.current(data.data.chat_id);
+                        handlersRef.current.onChatDeleted(data.data.chat_id);
                     } else if (data.type === 'user_updated') {
-                        onUserUpdatedRef.current(data.data);
+                        handlersRef.current.onUserUpdated(data.data);
                     } else if (data.type === 'message_reaction') {
-                        onMessageReactionRef.current(data.data);
+                        handlersRef.current.onMessageReaction(data.data);
                     }
                 } catch (err) {
                     console.error('WS parse error:', err);
@@ -97,7 +76,6 @@ export function useWebSocket(
 
             socket.onclose = () => {
                 if (!isMounted.current) return;
-                // Exponential backoff: 1s, 2s, 4s, 8s, ... capped at 30s
                 const delay = Math.min(1000 * Math.pow(2, reconnectAttempt.current), 30000);
                 console.log(`WS closed. Reconnecting in ${delay / 1000}s (attempt ${reconnectAttempt.current + 1})...`);
                 reconnectAttempt.current += 1;
