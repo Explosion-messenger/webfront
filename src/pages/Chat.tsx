@@ -134,9 +134,6 @@ const ChatPage: React.FC = () => {
 
     useEffect(() => {
         const handleContextMenu = (e: MouseEvent) => {
-            // Only disable on app structure, not inputs. But for simplicity let's disable whole window default.
-            // Actually, we should probably allow it on inputs, but let's conform to original logic.
-            // A better way is to allow inputs to have context menu. 
             if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return;
             e.preventDefault();
         };
@@ -217,7 +214,7 @@ const ChatPage: React.FC = () => {
                             />
 
                             <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
-                                <AnimatePresence mode="popLayout">
+                                <AnimatePresence>
                                     {!messagesLoading ? (
                                         messages.map((msg, index) => {
                                             const prevMsg = messages[index - 1];
@@ -266,13 +263,13 @@ const ChatPage: React.FC = () => {
                                 {showScrollButton && (
                                     <motion.button
                                         key="scroll-bottom-btn"
-                                        initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 20, scale: 0.8 }}
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.95 }}
+                                        initial={{ opacity: 0, scale: 0, y: 20 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0, y: 20 }}
+                                        whileHover={{ y: -5 }}
+                                        whileTap={{ scale: 0.9 }}
                                         onClick={scrollToBottom}
-                                        className="absolute bottom-28 right-8 z-40 bg-brand-accent text-white p-3 rounded-full shadow-glow flex items-center space-x-2 group"
+                                        className="absolute bottom-28 right-8 z-40 bg-brand-accent text-white p-3 rounded-full shadow-glow flex items-center space-x-2 group hover:bg-brand-accent/90"
                                     >
                                         <div className="relative">
                                             <ChevronDown size={24} className="group-hover:translate-y-0.5 transition-transform" />
