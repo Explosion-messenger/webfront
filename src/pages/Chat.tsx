@@ -290,7 +290,10 @@ const ChatPage: React.FC = () => {
                                 isSending={chatActions.isSending}
                                 replyToMessage={chatActions.replyToMessage}
                                 onClearReply={() => chatActions.setReplyToMessage(null)}
-                                onSendMessage={() => chatActions.sendMessage(inputText).then(success => { if (success) setInputText(''); })}
+                                onSendMessage={(e) => {
+                                    e.preventDefault();
+                                    chatActions.sendMessage(inputText).then(success => { if (success) setInputText(''); });
+                                }}
                                 onFileUpload={chatActions.handleFileUpload}
                             />
                         </div>

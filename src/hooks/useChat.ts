@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../api';
-import { type Message, type Chat } from '../types';
+import { type Message, type Chat, WSEventType } from '../types';
 
 export function useWebSocket(
     token: string | null,
@@ -46,27 +46,27 @@ export function useWebSocket(
             socket.onmessage = async (event) => {
                 try {
                     const data = JSON.parse(event.data);
-                    if (data.type === 'new_message') {
+                    if (data.type === WSEventType.NEW_MESSAGE) {
                         handlersRef.current.onNewMessage(data.data);
-                    } else if (data.type === 'delete_message') {
+                    } else if (data.type === WSEventType.DELETE_MESSAGE) {
                         handlersRef.current.onDeleteMessage(data.data.message_id, data.data.chat_id);
-                    } else if (data.type === 'new_chat') {
+                    } else if (data.type === WSEventType.NEW_CHAT) {
                         handlersRef.current.onNewChat(data.data);
-                    } else if (data.type === 'chat_updated') {
+                    } else if (data.type === WSEventType.CHAT_UPDATED) {
                         handlersRef.current.onChatUpdated(data.data);
-                    } else if (data.type === 'online_list') {
+                    } else if (data.type === WSEventType.ONLINE_LIST) {
                         handlersRef.current.onOnlineList(data.data);
-                    } else if (data.type === 'user_status') {
+                    } else if (data.type === WSEventType.USER_STATUS) {
                         handlersRef.current.onUserStatus(data.data.user_id, data.data.status);
-                    } else if (data.type === 'message_read') {
+                    } else if (data.type === WSEventType.MESSAGE_READ) {
                         handlersRef.current.onMessageRead(data.data);
-                    } else if (data.type === 'typing') {
+                    } else if (data.type === WSEventType.TYPING) {
                         handlersRef.current.onTyping(data.data);
-                    } else if (data.type === 'chat_deleted') {
+                    } else if (data.type === WSEventType.CHAT_DELETED) {
                         handlersRef.current.onChatDeleted(data.data.chat_id);
-                    } else if (data.type === 'user_updated') {
+                    } else if (data.type === WSEventType.USER_UPDATED) {
                         handlersRef.current.onUserUpdated(data.data);
-                    } else if (data.type === 'message_reaction') {
+                    } else if (data.type === WSEventType.MESSAGE_REACTION) {
                         handlersRef.current.onMessageReaction(data.data);
                     }
                 } catch (err) {
