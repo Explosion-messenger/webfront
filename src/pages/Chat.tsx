@@ -265,11 +265,14 @@ const ChatPage: React.FC = () => {
                             <AnimatePresence>
                                 {showScrollButton && (
                                     <motion.button
+                                        key="scroll-bottom-btn"
                                         initial={{ opacity: 0, y: 20, scale: 0.8 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 20, scale: 0.8 }}
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.95 }}
                                         onClick={scrollToBottom}
-                                        className="absolute bottom-28 right-8 z-40 bg-brand-accent text-white p-3 rounded-full shadow-glow flex items-center space-x-2 group hover:scale-110 active:scale-95 transition-all"
+                                        className="absolute bottom-28 right-8 z-40 bg-brand-accent text-white p-3 rounded-full shadow-glow flex items-center space-x-2 group"
                                     >
                                         <div className="relative">
                                             <ChevronDown size={24} className="group-hover:translate-y-0.5 transition-transform" />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { type Message, type Chat } from '../types';
 
 export function useChatScroll(
@@ -59,27 +59,44 @@ export function useChatScroll(
         lastMessagesLengthRef.current = messages.length;
     }, [messages, messagesLoading, user?.id]);
 
+    const handleScroll = useCallback(() => {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+
+        const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+
+        if (isAtBottom !== isAtBottomRef.current) {
+            isAtBottomRef.current = isAtBottom;
+            setShowScrollButton(!isAtBottom);
+        }
+
+        if (isAtBottom) {
+            setUnreadBottomCount(0);
+            // We use a ref-like approach or check messages to avoid expensive logic on every scroll
+        }
+    }, []);
+
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
 
-        const handleScroll = () => {
-            const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
-            isAtBottomRef.current = isAtBottom;
-            setShowScrollButton(!isAtBottom);
-
-            if (isAtBottom) {
-                setUnreadBottomCount(0);
-                if (messages.some(m => m.sender_id !== user?.id && !m.read_by.some(r => r.user_id === user?.id))) {
-                    onMarkChatRead();
-                }
-            }
-        };
-
-        container.addEventListener('scroll', handleScroll);
+        container.addEventListener('scroll', handleScroll, { passive: true });
         handleScroll();
         return () => container.removeEventListener('scroll', handleScroll);
-    }, [messages, user?.id, onMarkChatRead]);
+    }, [handleScroll]);
+
+    // Separate effect for marking read to avoid running it too often on scroll
+    useEffect(() => {
+        if (showScrollButton === false && activeChat) {
+            const hasUnread = messages.some(m =>
+                m.sender_id !== user?.id &&
+                !m.read_by?.some(r => r.user_id === user?.id)
+            );
+            if (hasUnread) {
+                onMarkChatRead();
+            }
+        }
+    }, [showScrollButton, messages, user?.id, activeChat, onMarkChatRead]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
